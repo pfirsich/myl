@@ -6,14 +6,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-std::string indent(std::string str, const char* indent = "  ")
-{
-    boost::replace_all(str, "\n", std::string("\n") + indent);
-    return str;
-}
-
 struct FieldType {
-    enum Type { invalid, placeholder, builtin, enum_, struct_, array, vector, map } fieldType;
+    enum Type { invalid, error, builtin, enum_, struct_, array, vector, map } fieldType;
 
     FieldType(Type fieldType)
         : fieldType(fieldType)
@@ -22,6 +16,21 @@ struct FieldType {
     virtual ~FieldType() = default;
 
     virtual std::string asString() const = 0;
+};
+
+struct ErrorFieldType : public FieldType {
+    std::string typeName;
+
+    ErrorFieldType(const std::string& typeName)
+        : FieldType(FieldType::error)
+        , typeName(typeName)
+    {
+    }
+
+    std::string asString() const
+    {
+        return "error type (" + typeName + ")";
+    }
 };
 
 struct BuiltinFieldType : public FieldType {
@@ -160,7 +169,7 @@ struct MapFieldType : public FieldType {
     std::shared_ptr<FieldType> valueType;
 
     MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<FieldType> valueType)
-        : FieldType(FieldType::array)
+        : FieldType(FieldType::map)
         , keyType(std::move(keyType))
         , valueType(std::move(valueType))
     {
@@ -184,23 +193,6 @@ struct StructFieldType : public FieldType {
     std::string asString() const
     {
         return "struct " + name;
-    }
-};
-
-// Structs can be parsed in any order (and an inner struct after the outer one), so we save a
-// placeholder instead
-struct PlaceholderFieldType : public FieldType {
-    std::string typeName;
-
-    PlaceholderFieldType(const std::string& name)
-        : FieldType(FieldType::placeholder)
-        , typeName(name)
-    {
-    }
-
-    std::string asString() const
-    {
-        return "placeholder (" + typeName + ")";
     }
 };
 
@@ -245,7 +237,7 @@ struct StructType {
         std::stringstream ss;
         ss << "{\n";
         for (size_t i = 0; i < fields.size(); ++i) {
-            ss << indent(fields[i].first + " : " + fields[i].second->asString());
+            ss << "  " << fields[i].first << " : " << fields[i].second->asString();
             if (i < fields.size() - 1)
                 ss << ",\n";
             else

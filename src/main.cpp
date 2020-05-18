@@ -64,17 +64,17 @@ std::shared_ptr<FieldType> parseType(const std::string& typeStr, const TypeCache
     if (structIt != cache.structs.end())
         return std::make_shared<StructFieldType>(structIt->first);
 
-    // This can not be a referencing a not-yet-parsed enum, because those were all parsed already.
-    // It will reference another struct
-    return std::make_shared<PlaceholderFieldType>(typeStr);
+    return std::make_shared<ErrorFieldType>(typeStr);
 }
 
-StructType parseStruct(const toml::table& fields, const TypeCache& cache)
+StructType parseStruct(const toml::array& fields, const TypeCache& cache)
 {
     StructType structType;
-    for (const auto&& [name, type] : *fields.as_table()) {
-        const auto typeStr = type.as_string()->get();
-        structType.fields.emplace_back(std::make_pair(name, parseType(typeStr, cache)));
+    for (const auto& field : fields) {
+        const auto& fieldTable = *field.as_table();
+        const auto name = fieldTable["name"].as_string()->get();
+        const auto type = fieldTable["type"].as_string()->get();
+        structType.fields.emplace_back(std::make_pair(name, parseType(type, cache)));
     }
     return structType;
 }
@@ -83,8 +83,8 @@ template <typename R = void, typename Func>
 void visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
 {
     switch (fieldType->fieldType) {
-    case FieldType::placeholder:
-        return func(std::dynamic_pointer_cast<PlaceholderFieldType>(fieldType));
+    case FieldType::error:
+        return func(std::dynamic_pointer_cast<ErrorFieldType>(fieldType));
     case FieldType::builtin:
         return func(std::dynamic_pointer_cast<BuiltinFieldType>(fieldType));
     case FieldType::enum_:
@@ -111,45 +111,23 @@ void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
     } else if (fieldType->fieldType == FieldType::vector) {
         traverse(func, dynamic_cast<VectorFieldType*>(fieldType.get())->elementType);
     } else if (fieldType->fieldType == FieldType::map) {
-        traverse(func, dynamic_cast<MapFieldType*>(fieldType.get())->keyType);
-        traverse(func, dynamic_cast<MapFieldType*>(fieldType.get())->valueType);
+        const auto mapFieldType = dynamic_cast<MapFieldType*>(fieldType.get());
+        traverse(func, mapFieldType->keyType);
+        traverse(func, mapFieldType->valueType);
     }
 }
 
-void replacePlaceholders(StructType& structType, const TypeCache& cache)
-{
-    for (auto& [name, field] : structType.fields) {
-        traverse(
-            [&cache](std::shared_ptr<FieldType>& fieldType) {
-                if (fieldType->fieldType == FieldType::placeholder) {
-                    const auto placeholder = dynamic_cast<PlaceholderFieldType*>(fieldType.get());
-                    assert(placeholder);
-                    const auto it = cache.structs.find(placeholder->typeName);
-                    if (it != cache.structs.end())
-                        fieldType = std::make_shared<StructFieldType>(placeholder->typeName);
-                }
-            },
-            field);
-    }
-}
-
-bool isRecursive(const std::string& name, const StructType& structType)
-{
-    // TODO
-    return false;
-}
-
-bool hasPlaceholders(StructType& structType)
+bool hasErrorType(StructType& structType)
 {
     for (auto& [name, field] : structType.fields) {
         bool has = false;
         traverse(
-            [&has](std::shared_ptr<FieldType> fieldType) {
-                has = has || fieldType->fieldType == FieldType::placeholder;
+            [&has](std::shared_ptr<FieldType>& fieldType) {
+                has = has || fieldType->fieldType == FieldType::error;
             },
             field);
         if (has)
-            return has;
+            return true;
     }
     return false;
 }
@@ -170,42 +148,32 @@ std::unordered_map<std::string, Component> loadComponentFromFile(std::string_vie
 
     TypeCache cache;
 
-    for (const auto&& [enumName, enum_] : *tbl["enums"].as_table()) {
+    for (const auto& enum_ : *tbl["enums"].as_array()) {
         const auto& enumTable = *enum_.as_table();
+        const auto enumName = enumTable["name"].as_string()->get();
         std::cout << "# Enum: " << enumName << std::endl;
         std::vector<std::string> values;
         for (const auto& value : *enumTable["values"].as_array()) {
             values.push_back(value.as_string()->get());
         }
-        cache.enums.emplace(enumName, values);
+        EnumType enumType { values };
+        std::cout << enumType.asString() << std::endl;
+        cache.enums.emplace(enumName, enumType);
     }
 
     std::set<std::string> componentNames;
-    for (const auto&& [name, struct_] : *tbl["structs"].as_table()) {
-        if (name == "components") {
-            for (const auto& value : *struct_.as_array()) {
-                componentNames.insert(value.as_string()->get());
-            }
-            continue;
-        }
+    for (const auto& struct_ : *tbl["structs"].as_array()) {
+        const auto& structTable = *struct_.as_table();
+        const auto name = structTable["name"].as_string()->get();
 
-        const auto& fields = *struct_.as_table();
-        const auto structType = parseStruct(fields, cache);
+        if (structTable["component"] && structTable["component"].as_boolean()->get())
+            componentNames.insert(name);
+
+        auto structType = parseStruct(*structTable["fields"].as_array(), cache);
+        if (hasErrorType(structType)) {
+            std::cerr << "Type '" << name << "' includes error types!" << std::endl;
+        }
         cache.structs.emplace(name, structType);
-    }
-
-    // Replace placeholders
-    for (auto&& [name, structType] : cache.structs) {
-        replacePlaceholders(structType, cache);
-        if (hasPlaceholders(structType)) {
-            std::cerr << "Type '" << name << "' still has a placeholder!" << std::endl;
-        }
-    }
-
-    for (auto&& [name, structType] : cache.structs) {
-        if (isRecursive(name, structType)) {
-            std::cerr << "Type '" << name << "' includes itself!" << std::endl;
-        }
     }
 
     for (auto&& [name, structType] : cache.structs) {

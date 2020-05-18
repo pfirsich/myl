@@ -1,24 +1,17 @@
-[enums]
-[enums.someEnum]
+[[enums]]
+name = "someEnum"
 # type = int
 values = ["x", "y", "z"]
 
-[structs]
-[structs.foobar]
-i = "u32"
-j = "u32"
+[[structs]]
+name = "foobar"
+fields = [
+    {name = "i", type = "u32"},
+    {name = "j", type = "u32"},
+]
 
-[structs.MoveComponent]
-a = "u32"
-b = "bool"
-c = "vec3"
-d = "someEnum"
-e = "foobar"
-f = "foobar[32]" # array
-g = "foobar[]" # vector
-h = "foobar[string]" # map
-
-[structs.MoveComponent2]
+[[structs]]
+name = "MoveComponent"
 component = true
 fields = [
     {name = "a", type = "u32"},
