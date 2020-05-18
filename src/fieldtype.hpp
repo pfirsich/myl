@@ -22,41 +22,7 @@ struct FieldType {
     virtual ~FieldType() = default;
 
     virtual std::string asString() const = 0;
-
-    virtual void replacePlaceholder(const std::string& typeStr, std::shared_ptr<FieldType> type)
-    {
-    }
 };
-
-// This is a placeholder for when e.g. a vector has an elementType, that has not been parsed yet.
-// In a second pass this will be replaced.
-struct PlaceHolderFieldType : public FieldType {
-    std::string typeStr;
-
-    PlaceHolderFieldType(std::string typeStr)
-        : FieldType(FieldType::placeholder)
-        , typeStr(typeStr)
-    {
-    }
-
-    std::string asString() const
-    {
-        return "placeholder(" + typeStr + ")";
-    }
-};
-
-void replacePlaceholder(std::shared_ptr<FieldType>& fieldType, const std::string& typeStr,
-    std::shared_ptr<FieldType> type)
-{
-    if (fieldType->fieldType == FieldType::placeholder) {
-        const auto placeholderFieldType = dynamic_cast<PlaceHolderFieldType*>(fieldType.get());
-        assert(placeholderFieldType);
-        if (placeholderFieldType->typeStr == typeStr)
-            fieldType = type;
-    } else {
-        fieldType->replacePlaceholder(typeStr, std::move(type));
-    }
-}
 
 struct BuiltinFieldType : public FieldType {
     enum Type {
@@ -143,57 +109,17 @@ const std::map<std::string, BuiltinFieldType::Type> BuiltinFieldType::typeFromSt
 };
 
 struct EnumFieldType : public FieldType {
-    // TODO: underlying type, assigned values
-    std::vector<std::string> values;
+    std::string name;
 
-    EnumFieldType(std::vector<std::string> values)
+    EnumFieldType(const std::string& name)
         : FieldType(FieldType::enum_)
-        , values(std::move(values))
+        , name(name)
     {
     }
 
     std::string asString() const
     {
-        std::stringstream ss;
-        ss << "enum {";
-        for (size_t i = 0; i < values.size(); ++i) {
-            ss << values[i];
-            if (i < values.size() - 1)
-                ss << ", ";
-        }
-        ss << "}";
-        return ss.str();
-    }
-};
-
-struct StructFieldType : public FieldType {
-    using Field = std::pair<std::string, std::shared_ptr<FieldType>>;
-    std::vector<Field> fields;
-
-    StructFieldType()
-        : FieldType(FieldType::struct_)
-    {
-    }
-
-    std::string asString() const
-    {
-        std::stringstream ss;
-        ss << "struct {\n";
-        for (size_t i = 0; i < fields.size(); ++i) {
-            ss << indent(fields[i].first + " : " + fields[i].second->asString());
-            if (i < fields.size() - 1)
-                ss << ",\n";
-            else
-                ss << "\n";
-        }
-        ss << "}";
-        return ss.str();
-    }
-
-    void replacePlaceholder(const std::string& typeStr, std::shared_ptr<FieldType> type)
-    {
-        for (auto& field : fields)
-            ::replacePlaceholder(field.second, typeStr, type);
+        return "enum " + name;
     }
 };
 
@@ -212,11 +138,6 @@ struct ArrayFieldType : public FieldType {
     {
         return "array<" + elementType->asString() + ", " + std::to_string(size) + ">";
     }
-
-    void replacePlaceholder(const std::string& typeStr, std::shared_ptr<FieldType> type)
-    {
-        ::replacePlaceholder(elementType, typeStr, type);
-    }
 };
 
 struct VectorFieldType : public FieldType {
@@ -231,11 +152,6 @@ struct VectorFieldType : public FieldType {
     std::string asString() const
     {
         return "vector<" + elementType->asString() + ">";
-    }
-
-    void replacePlaceholder(const std::string& typeStr, std::shared_ptr<FieldType> type)
-    {
-        ::replacePlaceholder(elementType, typeStr, type);
     }
 };
 
@@ -254,10 +170,88 @@ struct MapFieldType : public FieldType {
     {
         return "map<" + keyType->asString() + ", " + valueType->asString() + ">";
     }
+};
 
-    void replacePlaceholder(const std::string& typeStr, std::shared_ptr<FieldType> type)
+struct StructFieldType : public FieldType {
+    std::string name;
+
+    StructFieldType(const std::string& name)
+        : FieldType(FieldType::struct_)
+        , name(name)
     {
-        ::replacePlaceholder(keyType, typeStr, type);
-        ::replacePlaceholder(valueType, typeStr, type);
+    }
+
+    std::string asString() const
+    {
+        return "struct " + name;
+    }
+};
+
+// Structs can be parsed in any order (and an inner struct after the outer one), so we save a
+// placeholder instead
+struct PlaceholderFieldType : public FieldType {
+    std::string typeName;
+
+    PlaceholderFieldType(const std::string& name)
+        : FieldType(FieldType::placeholder)
+        , typeName(name)
+    {
+    }
+
+    std::string asString() const
+    {
+        return "placeholder (" + typeName + ")";
+    }
+};
+
+struct EnumType {
+    std::shared_ptr<BuiltinFieldType> underlyingType;
+    std::vector<std::pair<std::string, int64_t>> values;
+
+    EnumType(const std::vector<std::string>& valueNames)
+        : underlyingType(std::make_shared<BuiltinFieldType>(BuiltinFieldType::i32))
+    {
+        for (int64_t i = 0; i < valueNames.size(); ++i) {
+            values.emplace_back(std::pair<std::string, int64_t>(valueNames[i], i));
+        }
+    }
+
+    std::string asString() const
+    {
+        std::stringstream ss;
+        ss << "{";
+        for (size_t i = 0; i < values.size(); ++i) {
+            ss << values[i].first;
+            if (values[i].second != i)
+                ss << "(" << values[i].second << ")";
+            if (i < values.size() - 1)
+                ss << ", ";
+        }
+        ss << "}";
+        return ss.str();
+    }
+};
+
+struct StructType {
+    using Field = std::pair<std::string, std::shared_ptr<FieldType>>;
+    std::vector<Field> fields;
+
+    StructType()
+    {
+    }
+
+    std::string asString() const
+    {
+        std::stringstream ss;
+        ss << "{\n";
+        for (size_t i = 0; i < fields.size(); ++i) {
+            ss << indent(fields[i].first + " : " + fields[i].second->asString());
+            if (i < fields.size() - 1)
+                ss << ",\n";
+            else
+                ss << "\n";
+        }
+        ss << "}";
+        return ss.str();
     }
 };

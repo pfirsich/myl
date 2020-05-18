@@ -17,8 +17,8 @@ struct S {
 };
 
 struct TypeCache {
-    std::unordered_map<std::string, std::shared_ptr<EnumFieldType>> enums;
-    std::unordered_map<std::string, std::shared_ptr<StructFieldType>> structs;
+    std::unordered_map<std::string, EnumType> enums;
+    std::unordered_map<std::string, StructType> structs;
 };
 
 std::optional<std::string> getBracketType(std::string_view str)
@@ -58,24 +58,100 @@ std::shared_ptr<FieldType> parseType(const std::string& typeStr, const TypeCache
 
     const auto enumIt = cache.enums.find(typeStr);
     if (enumIt != cache.enums.end())
-        return enumIt->second;
+        return std::make_shared<EnumFieldType>(enumIt->first);
 
     const auto structIt = cache.structs.find(typeStr);
     if (structIt != cache.structs.end())
-        return structIt->second;
+        return std::make_shared<StructFieldType>(structIt->first);
 
-    return std::make_shared<PlaceHolderFieldType>(typeStr);
+    // This can not be a referencing a not-yet-parsed enum, because those were all parsed already.
+    // It will reference another struct
+    return std::make_shared<PlaceholderFieldType>(typeStr);
 }
 
-std::shared_ptr<StructFieldType> parseStruct(const toml::table& fields, const TypeCache& cache)
+StructType parseStruct(const toml::table& fields, const TypeCache& cache)
 {
-
-    const auto structType = std::make_shared<StructFieldType>();
+    StructType structType;
     for (const auto&& [name, type] : *fields.as_table()) {
         const auto typeStr = type.as_string()->get();
-        structType->fields.push_back(std::make_pair(name, parseType(typeStr, cache)));
+        structType.fields.emplace_back(std::make_pair(name, parseType(typeStr, cache)));
     }
     return structType;
+}
+
+template <typename R = void, typename Func>
+void visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
+{
+    switch (fieldType->fieldType) {
+    case FieldType::placeholder:
+        return func(std::dynamic_pointer_cast<PlaceholderFieldType>(fieldType));
+    case FieldType::builtin:
+        return func(std::dynamic_pointer_cast<BuiltinFieldType>(fieldType));
+    case FieldType::enum_:
+        return func(std::dynamic_pointer_cast<EnumFieldType>(fieldType));
+    case FieldType::struct_:
+        return func(std::dynamic_pointer_cast<StructFieldType>(fieldType));
+    case FieldType::array:
+        return func(std::dynamic_pointer_cast<ArrayFieldType>(fieldType));
+    case FieldType::vector:
+        return func(std::dynamic_pointer_cast<VectorFieldType>(fieldType));
+    case FieldType::map:
+        return func(std::dynamic_pointer_cast<MapFieldType>(fieldType));
+    default:
+        assert(false && "Invalid FieldType");
+    }
+}
+
+template <typename Func>
+void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
+{
+    func(fieldType);
+    if (fieldType->fieldType == FieldType::array) {
+        traverse(func, dynamic_cast<ArrayFieldType*>(fieldType.get())->elementType);
+    } else if (fieldType->fieldType == FieldType::vector) {
+        traverse(func, dynamic_cast<VectorFieldType*>(fieldType.get())->elementType);
+    } else if (fieldType->fieldType == FieldType::map) {
+        traverse(func, dynamic_cast<MapFieldType*>(fieldType.get())->keyType);
+        traverse(func, dynamic_cast<MapFieldType*>(fieldType.get())->valueType);
+    }
+}
+
+void replacePlaceholders(StructType& structType, const TypeCache& cache)
+{
+    for (auto& [name, field] : structType.fields) {
+        traverse(
+            [&cache](std::shared_ptr<FieldType>& fieldType) {
+                if (fieldType->fieldType == FieldType::placeholder) {
+                    const auto placeholder = dynamic_cast<PlaceholderFieldType*>(fieldType.get());
+                    assert(placeholder);
+                    const auto it = cache.structs.find(placeholder->typeName);
+                    if (it != cache.structs.end())
+                        fieldType = std::make_shared<StructFieldType>(placeholder->typeName);
+                }
+            },
+            field);
+    }
+}
+
+bool isRecursive(const std::string& name, const StructType& structType)
+{
+    // TODO
+    return false;
+}
+
+bool hasPlaceholders(StructType& structType)
+{
+    for (auto& [name, field] : structType.fields) {
+        bool has = false;
+        traverse(
+            [&has](std::shared_ptr<FieldType> fieldType) {
+                has = has || fieldType->fieldType == FieldType::placeholder;
+            },
+            field);
+        if (has)
+            return has;
+    }
+    return false;
 }
 
 std::unordered_map<std::string, Component> loadComponentFromFile(std::string_view path)
@@ -101,7 +177,7 @@ std::unordered_map<std::string, Component> loadComponentFromFile(std::string_vie
         for (const auto& value : *enumTable["values"].as_array()) {
             values.push_back(value.as_string()->get());
         }
-        cache.enums.emplace(enumName, std::make_shared<EnumFieldType>(values));
+        cache.enums.emplace(enumName, values);
     }
 
     std::set<std::string> componentNames;
@@ -120,9 +196,15 @@ std::unordered_map<std::string, Component> loadComponentFromFile(std::string_vie
 
     // Replace placeholders
     for (auto&& [name, structType] : cache.structs) {
-        for (auto&& [otherName, otherStructType] : cache.structs) {
-            if (name != otherName)
-                structType->replacePlaceholder(otherName, otherStructType);
+        replacePlaceholders(structType, cache);
+        if (hasPlaceholders(structType)) {
+            std::cerr << "Type '" << name << "' still has a placeholder!" << std::endl;
+        }
+    }
+
+    for (auto&& [name, structType] : cache.structs) {
+        if (isRecursive(name, structType)) {
+            std::cerr << "Type '" << name << "' includes itself!" << std::endl;
         }
     }
 
@@ -131,7 +213,7 @@ std::unordered_map<std::string, Component> loadComponentFromFile(std::string_vie
             std::cout << "# Component: " << name << std::endl;
         else
             std::cout << "# Struct: " << name << std::endl;
-        std::cout << structType->asString() << std::endl;
+        std::cout << structType.asString() << std::endl;
     }
 
     return components;
