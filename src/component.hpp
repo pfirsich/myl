@@ -1,0 +1,36 @@
+#pragma once
+
+#include "struct.hpp"
+
+enum class Type {
+    u8,
+    i8,
+    u16,
+    i16,
+    u32,
+    i32,
+    u64,
+    i64,
+    f32,
+    vec2,
+    vec3,
+    vec4,
+    enum_, // do I have to save which enum?
+    string,
+
+    struct_, // do I have to save which struct?
+
+    // "template types"
+    array,
+    vector,
+    map,
+};
+
+class Component : public Struct {
+};
+
+class ComponentBuilder {
+public:
+private:
+    StructBuilder builder_;
+};
