@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <map>
 #include <memory>
 #include <string>
@@ -12,6 +13,8 @@ struct FieldType {
     virtual ~FieldType() = default;
 
     virtual std::string asString() const = 0;
+    virtual size_t getSize() const;
+    virtual size_t getAlignment() const;
 };
 
 struct ErrorFieldType : public FieldType {
@@ -19,7 +22,7 @@ struct ErrorFieldType : public FieldType {
 
     ErrorFieldType(const std::string& typeName);
 
-    std::string asString() const;
+    std::string asString() const override;
 };
 
 struct BuiltinFieldType : public FieldType {
@@ -45,7 +48,9 @@ struct BuiltinFieldType : public FieldType {
 
     BuiltinFieldType(Type type);
 
-    std::string asString() const;
+    std::string asString() const override;
+    size_t getSize() const override;
+    size_t getAlignment() const override;
 };
 
 struct EnumFieldType : public FieldType {
@@ -53,7 +58,9 @@ struct EnumFieldType : public FieldType {
 
     EnumFieldType(const std::string& name);
 
-    std::string asString() const;
+    std::string asString() const override;
+    size_t getSize() const override;
+    size_t getAlignment() const override;
 };
 
 struct ArrayFieldType : public FieldType {
@@ -62,7 +69,9 @@ struct ArrayFieldType : public FieldType {
 
     ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t size);
 
-    std::string asString() const;
+    std::string asString() const override;
+    size_t getSize() const override;
+    size_t getAlignment() const override;
 };
 
 struct VectorFieldType : public FieldType {
@@ -70,7 +79,7 @@ struct VectorFieldType : public FieldType {
 
     VectorFieldType(std::shared_ptr<FieldType> elementType);
 
-    std::string asString() const;
+    std::string asString() const override;
 };
 
 struct MapFieldType : public FieldType {
@@ -79,7 +88,7 @@ struct MapFieldType : public FieldType {
 
     MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<FieldType> valueType);
 
-    std::string asString() const;
+    std::string asString() const override;
 };
 
 struct StructFieldType : public FieldType {
@@ -87,7 +96,7 @@ struct StructFieldType : public FieldType {
 
     StructFieldType(const std::string& name);
 
-    std::string asString() const;
+    std::string asString() const override;
 };
 
 struct EnumType {
@@ -107,3 +116,44 @@ struct StructType {
 
     std::string asString() const;
 };
+
+// These functions take a std::shared_ptr, because the functions that use them
+// sometimes need to replace pointers
+
+template <typename R = void, typename Func>
+R visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
+{
+    switch (fieldType->fieldType) {
+    case FieldType::error:
+        return func(std::dynamic_pointer_cast<ErrorFieldType>(fieldType));
+    case FieldType::builtin:
+        return func(std::dynamic_pointer_cast<BuiltinFieldType>(fieldType));
+    case FieldType::enum_:
+        return func(std::dynamic_pointer_cast<EnumFieldType>(fieldType));
+    case FieldType::struct_:
+        return func(std::dynamic_pointer_cast<StructFieldType>(fieldType));
+    case FieldType::array:
+        return func(std::dynamic_pointer_cast<ArrayFieldType>(fieldType));
+    case FieldType::vector:
+        return func(std::dynamic_pointer_cast<VectorFieldType>(fieldType));
+    case FieldType::map:
+        return func(std::dynamic_pointer_cast<MapFieldType>(fieldType));
+    default:
+        assert(false && "Invalid FieldType");
+    }
+}
+
+template <typename Func>
+void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
+{
+    func(fieldType);
+    if (fieldType->fieldType == FieldType::array) {
+        traverse(func, dynamic_cast<ArrayFieldType*>(fieldType.get())->elementType);
+    } else if (fieldType->fieldType == FieldType::vector) {
+        traverse(func, dynamic_cast<VectorFieldType*>(fieldType.get())->elementType);
+    } else if (fieldType->fieldType == FieldType::map) {
+        const auto mapFieldType = dynamic_cast<MapFieldType*>(fieldType.get());
+        traverse(func, mapFieldType->keyType);
+        traverse(func, mapFieldType->valueType);
+    }
+}

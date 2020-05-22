@@ -3,6 +3,8 @@
 #include "struct.hpp"
 
 enum class Type {
+    invalid,
+    bool_,
     u8,
     i8,
     u16,
@@ -15,10 +17,11 @@ enum class Type {
     vec2,
     vec3,
     vec4,
-    enum_, // do I have to save which enum?
     string,
 
-    struct_, // do I have to save which struct?
+    // need metadata
+    enum_,
+    struct_,
 
     // "template types"
     array,
@@ -31,6 +34,8 @@ class Component : public Struct {
 
 class ComponentBuilder {
 public:
+    ComponentBuilder build() const;
+
 private:
     StructBuilder builder_;
 };

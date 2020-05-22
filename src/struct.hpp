@@ -6,7 +6,15 @@
 #include <string>
 #include <vector>
 
-// TODO: Paraphrase /home/joel/Pictures/alignment_rules.png
+#include "fieldtype.hpp"
+
+/*
+ * According to a conversation with someone more knowledgable:
+ * Each platform bases it's structure layout (alignment, sizes)
+ * on one compiler (gcc for Linux, * Clang for *BSD, MSVC for Windows).
+ * So I think if I just use std::alignment_of with a compiler that already
+ * plays well with the platform it's working on, then I should be good.
+ */
 
 class Struct {
 private:
@@ -34,6 +42,7 @@ public:
         }
 
         std::string name;
+        std::shared_ptr<FieldType> type;
         size_t offset;
         size_t size;
         size_t alignment;
@@ -103,21 +112,12 @@ public:
     {
     }
 
-    void addField(const std::string& name, size_t size, size_t alignment)
+    void addField(const std::string& name, std::shared_ptr<FieldType> type)
     {
+        const auto alignment = type->getAlignment();
         currentOffset_ = align(currentOffset_, alignment);
-        fields_.emplace_back(Struct::Field { name, currentOffset_, size, alignment });
-    }
-
-    template <typename T>
-    void addField(const std::string& name)
-    {
-        addField(name, sizeof(T), std::alignment_of_v<T>);
-    }
-
-    void addField(const Struct& s, const std::string& name)
-    {
-        addField(name, s.getSize(), s.getAlignment());
+        fields_.emplace_back(
+            Struct::Field { name, type, currentOffset_, type->getSize(), alignment });
     }
 
     Struct build() const

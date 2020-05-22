@@ -1,10 +1,23 @@
 #include "fieldtype.hpp"
 
+#include <cassert>
 #include <sstream>
 
 FieldType::FieldType(Type fieldType)
     : fieldType(fieldType)
 {
+}
+
+size_t FieldType::getSize() const
+{
+    assert(false && "Unimplemented");
+    return 0;
+}
+
+size_t FieldType::getAlignment() const
+{
+    assert(false && "Unimplemented");
+    return 0;
 }
 
 ErrorFieldType::ErrorFieldType(const std::string& typeName)
@@ -80,6 +93,80 @@ std::string BuiltinFieldType::asString() const
     };
 }
 
+size_t BuiltinFieldType::getSize() const
+{
+    switch (type) {
+    case Type::invalid:
+        assert(false && "type = invalid");
+    case Type::bool_:
+        return sizeof(bool);
+    case Type::u8:
+        return sizeof(uint8_t);
+    case Type::i8:
+        return sizeof(int8_t);
+    case Type::u16:
+        return sizeof(uint16_t);
+    case Type::i16:
+        return sizeof(int16_t);
+    case Type::u32:
+        return sizeof(uint32_t);
+    case Type::i32:
+        return sizeof(int32_t);
+    case Type::u64:
+        return sizeof(uint64_t);
+    case Type::i64:
+        return sizeof(int64_t);
+    case Type::f32:
+        return sizeof(float);
+    case Type::vec2:
+        return sizeof(float[2]);
+    case Type::vec3:
+        return sizeof(float[3]);
+    case Type::vec4:
+        return sizeof(float[4]);
+    case Type::string:
+        assert(false && "Unimplementd");
+        return 0;
+    };
+}
+
+size_t BuiltinFieldType::getAlignment() const
+{
+    switch (type) {
+    case Type::invalid:
+        assert(false && "type = invalid");
+    case Type::bool_:
+        return std::alignment_of_v<bool>;
+    case Type::u8:
+        return std::alignment_of_v<uint8_t>;
+    case Type::i8:
+        return std::alignment_of_v<int8_t>;
+    case Type::u16:
+        return std::alignment_of_v<uint16_t>;
+    case Type::i16:
+        return std::alignment_of_v<int16_t>;
+    case Type::u32:
+        return std::alignment_of_v<uint32_t>;
+    case Type::i32:
+        return std::alignment_of_v<int32_t>;
+    case Type::u64:
+        return std::alignment_of_v<uint64_t>;
+    case Type::i64:
+        return std::alignment_of_v<int64_t>;
+    case Type::f32:
+        return std::alignment_of_v<float>;
+    case Type::vec2:
+        return std::alignment_of_v<float[2]>;
+    case Type::vec3:
+        return std::alignment_of_v<float[3]>;
+    case Type::vec4:
+        return std::alignment_of_v<float[4]>;
+    case Type::string:
+        assert(false && "Unimplementd");
+        return 0;
+    };
+}
+
 EnumFieldType::EnumFieldType(const std::string& name)
     : FieldType(FieldType::enum_)
     , name(name)
@@ -89,6 +176,16 @@ EnumFieldType::EnumFieldType(const std::string& name)
 std::string EnumFieldType::asString() const
 {
     return "enum " + name;
+}
+
+size_t EnumFieldType::getSize() const
+{
+    return sizeof(int);
+}
+
+size_t EnumFieldType::getAlignment() const
+{
+    return std::alignment_of_v<int>;
 }
 
 ArrayFieldType::ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t size)
@@ -101,6 +198,16 @@ ArrayFieldType::ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t si
 std::string ArrayFieldType::asString() const
 {
     return "array<" + elementType->asString() + ", " + std::to_string(size) + ">";
+}
+
+size_t ArrayFieldType::getSize() const
+{
+    return size * elementType->getSize();
+}
+
+size_t ArrayFieldType::getAlignment() const
+{
+    return elementType->getAlignment();
 }
 
 VectorFieldType::VectorFieldType(std::shared_ptr<FieldType> elementType)

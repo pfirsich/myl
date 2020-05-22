@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <map>
 #include <utility>
 #include <vector>
 
@@ -26,8 +28,8 @@ public:
         assert(!has(entityId));
         const auto [page, index] = getIndices(entityId);
 
-        if (page >= pages_[page].size())
-            pages_.resize(page + 1);
+        if (page >= pages_.size())
+            pages_.resize(page + 1, Page(pageSize_));
 
         auto& pageObj = pages_[page];
         if (!pageObj.data)
@@ -61,10 +63,15 @@ public:
 private:
     struct Page {
         void* data = nullptr;
-        boost::dynamic_bitset occupied;
+        boost::dynamic_bitset<> occupied;
+
+        Page(size_t pageSize)
+            : occupied(pageSize)
+        {
+        }
     };
 
-    auto getIndices(EntityId entityId) const
+    std::pair<size_t, size_t> getIndices(EntityId entityId) const
     {
         return std::pair<size_t, size_t>(entityId / pageSize_, entityId % pageSize_);
     }
@@ -78,4 +85,18 @@ private:
     size_t componentSize_;
     size_t pageSize_;
     std::vector<Page> pages_;
+};
+
+struct World {
+    std::map<std::string, ComponentPool> componentPools;
+
+    void* addComponent(const std::string& name, EntityId entityId)
+    {
+        return componentPools.at(name).add(entityId);
+    }
+
+    void* getComponent(const std::string& name, EntityId entityId)
+    {
+        return componentPools.at(name).get(entityId);
+    }
 };

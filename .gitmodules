@@ -1,0 +1,9 @@
+[submodule "sol2"]
+	path = deps/sol2
+	url = git@github.com:ThePhD/sol2.git
+[submodule "deps/LuaJIT"]
+	path = deps/LuaJIT
+	url = https://github.com/LuaJIT/LuaJIT.git
+[submodule "deps/tomlplusplus"]
+	path = deps/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

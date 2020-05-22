@@ -1,6 +1,9 @@
+#pragma once
+
 #include <unordered_map>
 
 #include "fieldtype.hpp"
+#include "vector_map.hpp"
 
 struct StructData {
     StructType structType;
@@ -9,8 +12,8 @@ struct StructData {
 };
 
 struct ComponentFileData {
-    std::unordered_map<std::string, EnumType> enums;
-    std::unordered_map<std::string, StructData> structs;
+    vector_map<std::string, EnumType> enums;
+    vector_map<std::string, StructData> structs;
 };
 
 ComponentFileData loadComponentFromFile(std::string_view path);

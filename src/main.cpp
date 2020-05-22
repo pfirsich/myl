@@ -1,23 +1,48 @@
 #include "componentfile.hpp"
+#include "componentpool.hpp"
+#include "lua.hpp"
 #include "struct.hpp"
 
-struct S {
-    uint64_t id;
-    std::string name;
+struct MoveComponent {
+    uint32_t id;
+    bool flag;
 };
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    const auto components = loadComponentFromFile("component.toml");
-
-    StructBuilder sb;
-    sb.addField<uint64_t>("id");
-    sb.addField<std::string>("name");
-
-    const auto s = sb.build();
-    const auto sbuffer = s.allocate();
-    for (const auto& field : s.getFields()) {
+    std::vector<std::string> args(argv + 1, argv + argc);
+    if (args.empty()) {
+        std::cerr << "Please pass a script file" << std::endl;
+        return 1;
     }
 
-    sb.addField<decltype(S::id)>("id");
+    std::map<std::string, Struct> components;
+    const auto componentData = loadComponentFromFile("components.toml");
+    for (const auto& [name, component] : componentData.structs) {
+        if (!component.isComponent)
+            continue;
+
+        StructBuilder sb;
+        for (const auto& [fieldName, fieldType] : component.structType.fields) {
+            sb.addField(fieldName, fieldType);
+        }
+        components.emplace(name, sb.build());
+    }
+
+    World world;
+    for (const auto& [name, component] : components) {
+        // TODO: Page size has to be configurable at some point.
+        world.componentPools.emplace(name, ComponentPool(component.getSize(), 1024));
+    }
+
+    auto comp = reinterpret_cast<MoveComponent*>(world.addComponent("MoveComponent", 0));
+    comp->id = 69;
+    comp->flag = true;
+
+    sol::state lua;
+    Lua::init(lua, componentData, world);
+
+    lua.script_file(args[0]);
+
+    std::cout << (comp->flag ? "true" : "false") << std::endl;
 }

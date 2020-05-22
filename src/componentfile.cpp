@@ -69,44 +69,6 @@ StructType parseStruct(const toml::array& fields, const ComponentFileData& cache
     return structType;
 }
 
-template <typename R = void, typename Func>
-void visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
-{
-    switch (fieldType->fieldType) {
-    case FieldType::error:
-        return func(std::dynamic_pointer_cast<ErrorFieldType>(fieldType));
-    case FieldType::builtin:
-        return func(std::dynamic_pointer_cast<BuiltinFieldType>(fieldType));
-    case FieldType::enum_:
-        return func(std::dynamic_pointer_cast<EnumFieldType>(fieldType));
-    case FieldType::struct_:
-        return func(std::dynamic_pointer_cast<StructFieldType>(fieldType));
-    case FieldType::array:
-        return func(std::dynamic_pointer_cast<ArrayFieldType>(fieldType));
-    case FieldType::vector:
-        return func(std::dynamic_pointer_cast<VectorFieldType>(fieldType));
-    case FieldType::map:
-        return func(std::dynamic_pointer_cast<MapFieldType>(fieldType));
-    default:
-        assert(false && "Invalid FieldType");
-    }
-}
-
-template <typename Func>
-void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
-{
-    func(fieldType);
-    if (fieldType->fieldType == FieldType::array) {
-        traverse(func, dynamic_cast<ArrayFieldType*>(fieldType.get())->elementType);
-    } else if (fieldType->fieldType == FieldType::vector) {
-        traverse(func, dynamic_cast<VectorFieldType*>(fieldType.get())->elementType);
-    } else if (fieldType->fieldType == FieldType::map) {
-        const auto mapFieldType = dynamic_cast<MapFieldType*>(fieldType.get());
-        traverse(func, mapFieldType->keyType);
-        traverse(func, mapFieldType->valueType);
-    }
-}
-
 bool hasErrorType(StructType& structType)
 {
     for (auto& [name, field] : structType.fields) {
@@ -146,7 +108,7 @@ ComponentFileData loadComponentFromFile(std::string_view path)
         }
         EnumType enumType { values };
         std::cout << enumType.asString() << std::endl;
-        data.enums.emplace(enumName, enumType);
+        data.enums.insert(enumName, enumType);
     }
 
     for (const auto& struct_ : *tbl["structs"].as_array()) {
@@ -159,7 +121,7 @@ ComponentFileData loadComponentFromFile(std::string_view path)
         }
 
         const bool isComponent = structTable["component"].value_or(false);
-        data.structs.emplace(name, StructData { structType, name, isComponent });
+        data.structs.insert(name, StructData { structType, name, isComponent });
 
         if (isComponent)
             std::cout << "# Component: " << name << std::endl;
