@@ -1,5 +1,5 @@
 #include "componentfile.hpp"
-#include "componentpool.hpp"
+#include "ecs.hpp"
 #include "lua.hpp"
 #include "struct.hpp"
 
@@ -16,8 +16,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::map<std::string, Struct> components;
     const auto componentData = loadComponentFromFile("components.toml");
+    std::vector<Component> components;
     for (const auto& [name, component] : componentData.structs) {
         if (!component.isComponent)
             continue;
@@ -26,16 +26,12 @@ int main(int argc, char** argv)
         for (const auto& [fieldName, fieldType] : component.structType.fields) {
             sb.addField(fieldName, fieldType);
         }
-        components.emplace(name, sb.build());
+        components.emplace_back(name, sb.build());
     }
 
-    World world;
-    for (const auto& [name, component] : components) {
-        // TODO: Page size has to be configurable at some point.
-        world.componentPools.emplace(name, ComponentPool(component.getSize(), 1024));
-    }
+    World world(components);
 
-    auto comp = reinterpret_cast<MoveComponent*>(world.addComponent("MoveComponent", 0));
+    auto comp = world.addComponent<MoveComponent>(0, "MoveComponent");
     comp->id = 69;
     comp->flag = true;
 

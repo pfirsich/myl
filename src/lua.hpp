@@ -4,7 +4,7 @@
 #include <sol/sol.hpp>
 
 #include "componentfile.hpp"
-#include "componentpool.hpp"
+#include "ecs.hpp"
 
 namespace Lua {
 std::string getAsCString(const StructData& structData);

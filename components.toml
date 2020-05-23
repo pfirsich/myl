@@ -23,3 +23,17 @@ fields = [
     #{name = "g", type = "foobar[]"}, # vector
     #{name = "h", type = "foobar[string]"}, # map
 ]
+
+[[structs]]
+name = "PositionComponent"
+component = true
+fields = [
+    {name = "value", type = "vec2"}
+]
+
+[[structs]]
+name = "VelocityComponent"
+component = true
+fields = [
+    {name = "value", type = "vec2"}
+]

@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-// Keeps insertion order and does linear search
+// like flat_map, but keeps insertion order and does linear search
 // Tries to be STL compatible
 template <typename Key, typename T, typename Allocator = std::allocator<std::pair<const Key, T>>>
 class vector_map {

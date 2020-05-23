@@ -5,8 +5,43 @@
 static const auto lib = R"(
 local ffi = require("ffi")
 
-function myl.getComponent(component, entityId)
-    return ffi.cast(component .. "*", myl._getComponent(component, entityId))[0]
+ffi.cdef [[
+typedef struct {
+    float x, y;
+} vec2;
+
+typedef struct {
+    float x, y, z;
+} vec3;
+
+typedef struct {
+    float x, y, z, w;
+} vec4;
+]]
+
+function myl.addComponent(entityId, component)
+    return ffi.cast(component .. "*", myl._addComponent(entityId, component))[0]
+end
+
+function myl.getComponent(entityId, component)
+    return ffi.cast(component .. "*", myl._getComponent(entityId, component))[0]
+end
+
+myl.phases = {
+    init = 0,
+    postInit = 1,
+    preUpdate = 2,
+    update = 3,
+    postUpdate = 4,
+    preDraw = 5,
+    draw = 6,
+    postDraw = 7,
+
+    addComponent = 8,
+    removeComponent = 9,
+}
+
+function myl.registerSystem(name, phase, requiresComponents, func)
 end
 )";
 
@@ -38,11 +73,11 @@ std::string getCTypeName(BuiltinFieldType::Type type)
     case BuiltinFieldType::Type::f32:
         return "float";
     case BuiltinFieldType::Type::vec2:
-        assert(false && "vec2 unimplemented");
+        return "vec2";
     case BuiltinFieldType::Type::vec3:
-        assert(false && "vec3 unimplemented");
+        return "vec3";
     case BuiltinFieldType::Type::vec4:
-        assert(false && "vec4 unimplemented");
+        return "vec4";
     case BuiltinFieldType::Type::string:
         assert(false && "string unimplemented");
     };
@@ -87,10 +122,23 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
 {
     lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::ffi);
 
-    lua.create_named_table("myl");
-    lua["myl"]["_getComponent"].set_function(
-        [&world](const std::string& name, EntityId entityId) -> sol::lightuserdata_value {
-            return world.getComponent(name, entityId);
+    auto myl = lua.create_named_table("myl");
+    myl["entityExists"].set_function(
+        [&world](EntityId entityId) -> bool { return world.entityExists(entityId); });
+    myl["newEntity"].set_function([&world]() -> EntityId { return world.newEntity(); });
+    myl["destroyEntity"].set_function(
+        [&world](EntityId entityId) -> void { world.destroyEntity(entityId); });
+    myl["removeComponent"].set_function(
+        [&world](EntityId entityId, const std::string& name) -> void {
+            world.removeComponent(entityId, name);
+        });
+    myl["_addComponent"].set_function(
+        [&world](EntityId entityId, const std::string& name) -> sol::lightuserdata_value {
+            return world.addComponent(entityId, name);
+        });
+    myl["_getComponent"].set_function(
+        [&world](EntityId entityId, const std::string& name) -> sol::lightuserdata_value {
+            return world.getComponent(entityId, name);
         });
     lua.script(lib);
 
