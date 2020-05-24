@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "modules/input.hpp"
 #include "modules/timer.hpp"
 #include "modules/window.hpp"
 
@@ -151,6 +152,13 @@ void addTimerModule(sol::state& lua)
     timer["getDelta"] = myl::modules::timer::getDelta;
 }
 
+void addInputModule(sol::state& lua)
+{
+    std::cout << "Init service 'input'" << std::endl;
+    auto input = lua["myl"]["service"]["input"] = lua.create_table();
+    input["getKeyboardDown"] = myl::modules::input::getKeyboardDown;
+}
+
 void init(sol::state& lua, const ComponentFileData& componentData, World& world)
 {
     lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::ffi);
@@ -165,6 +173,9 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
 
     myl["removeComponent"].set_function([&world](EntityId entityId, Component::Id compId) -> void {
         world.removeComponent(entityId, compId);
+    });
+    myl["hasComponent"].set_function([&world](EntityId entityId, Component::Id compId) -> bool {
+        return world.hasComponent(entityId, compId);
     });
     myl["_addComponent"].set_function(
         [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
@@ -193,11 +204,12 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
         const auto entities = world.getEntities(mask);
 
         size_t index = 0;
-        return sol::as_function([entities, index](sol::this_state L) mutable -> sol::object {
-            if (index < entities.size())
-                return sol::make_object(L, entities[index++]);
-            return sol::make_object(L, sol::nil);
-        });
+        return sol::as_function(
+            [entities, index](sol::this_state L) mutable -> std::optional<EntityId> {
+                if (index < entities.size())
+                    return entities[index++];
+                return std::nullopt;
+            });
     });
 
     myl["registerSystem"].set_function([&world](const std::string& name, sol::function function) {
@@ -213,6 +225,7 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
     myl["service"] = lua.create_table();
     addWindowModule(lua);
     addTimerModule(lua);
+    addInputModule(lua);
 
     std::cout << "Init components" << std::endl;
     myl["c"] = lua.create_table();

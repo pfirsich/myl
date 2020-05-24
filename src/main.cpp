@@ -121,6 +121,9 @@ int main(int argc, char** argv)
 
     World world(components);
 
+    PlayerInputSystem playerInput(world);
+    world.registerSystem("PlayerInputSystem", [&](float dt) { playerInput.update(dt); });
+
     RectangleRenderSystem rectangleRender(world);
     world.registerSystem("RectangleRenderSystem", [&](float dt) { rectangleRender.update(dt); });
 

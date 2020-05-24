@@ -12,6 +12,7 @@ set(SRC
   lua.cpp
   modules/timer.cpp
   modules/window.cpp
+  modules/input.cpp
   main.cpp
 )
 list(TRANSFORM SRC PREPEND src/)
