@@ -31,14 +31,15 @@ int main(int argc, char** argv)
 
     World world(components);
 
-    auto comp = world.addComponent<MoveComponent>(0, "MoveComponent");
-    comp->id = 69;
-    comp->flag = true;
-
     sol::state lua;
     Lua::init(lua, componentData, world);
 
+    std::cout << "Executing '" << args[0] << std::endl;
     lua.script_file(args[0]);
 
-    std::cout << (comp->flag ? "true" : "false") << std::endl;
+    std::cout << "Executing main()" << std::endl;
+    lua["myl"]["main"]();
+    std::cout << "Mainloop exited." << std::endl;
+
+    return 0;
 }

@@ -1,6 +1,9 @@
 #include "lua.hpp"
 
 #include <cassert>
+#include <iostream>
+
+namespace Lua {
 
 static const auto lib = R"(
 local ffi = require("ffi")
@@ -26,26 +29,7 @@ end
 function myl.getComponent(entityId, component)
     return ffi.cast(component .. "*", myl._getComponent(entityId, component))[0]
 end
-
-myl.phases = {
-    init = 0,
-    postInit = 1,
-    preUpdate = 2,
-    update = 3,
-    postUpdate = 4,
-    preDraw = 5,
-    draw = 6,
-    postDraw = 7,
-
-    addComponent = 8,
-    removeComponent = 9,
-}
-
-function myl.registerSystem(name, phase, requiresComponents, func)
-end
 )";
-
-namespace Lua {
 
 std::string getCTypeName(BuiltinFieldType::Type type)
 {
@@ -140,6 +124,23 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
         [&world](EntityId entityId, const std::string& name) -> sol::lightuserdata_value {
             return world.getComponent(entityId, name);
         });
+    myl["registerSystem"].set_function(
+        [&world](const std::string& name, sol::as_table_t<std::vector<std::string>> components,
+            sol::function function) {
+            ComponentMask has, hasNot;
+            for (const auto& component : components.value()) {
+                if (component[0] == '!')
+                    hasNot.include(world.getComponentId(component.substr(1)));
+                else
+                    has.include(world.getComponentId(component));
+            }
+            std::cout << "has: " << has.getMask() << std::endl;
+            std::cout << "hasnot: " << hasNot.getMask() << std::endl;
+            world.registerSystem(name, has, hasNot,
+                [function](EntityId entityId, float dt) { function(entityId, dt); });
+        });
+    myl["invokeSystem"].set_function(
+        [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
     lua.script(lib);
 
     for (const auto& [name, structData] : componentData.structs) {

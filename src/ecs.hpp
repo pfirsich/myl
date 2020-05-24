@@ -2,6 +2,7 @@
 
 #include <bitset>
 #include <cstdint>
+#include <iostream>
 #include <map>
 #include <queue>
 #include <utility>
@@ -40,6 +41,7 @@ public:
         auto& pageObj = pages_[page];
         if (!pageObj.data)
             pageObj.data = ::operator new(pageSize_* componentSize_);
+        std::memset(pageObj.data, 0, componentSize_);
         pageObj.occupied.set(index, true);
 
         return getPointer(page, index);
@@ -136,6 +138,11 @@ class ComponentMask {
 public:
     ComponentMask() = default;
 
+    ComponentMask(Component::Id id)
+    {
+        mask_.set(id, true);
+    }
+
     ComponentMask(const Component& component)
     {
         mask_.set(component.getId(), true);
@@ -154,6 +161,16 @@ public:
     bool includes(const Component& component) const
     {
         return mask_.test(component.getId());
+    }
+
+    void include(const Component& component)
+    {
+        mask_.set(component.getId(), true);
+    }
+
+    void include(Component::Id id)
+    {
+        mask_.set(id, true);
     }
 
     // Returns true if none of the components in other are included in *this
@@ -177,6 +194,11 @@ public:
     void clear()
     {
         mask_.reset();
+    }
+
+    auto getMask() const
+    {
+        return mask_;
     }
 
 private:
@@ -233,9 +255,22 @@ public:
         entityIdFreeList_.push(id);
     }
 
+    bool hasComponent(EntityId id, Component::Id compId)
+    {
+        assert(entityExists(id));
+        return entities_[id].components.includes(compId);
+    }
+
+    bool hasComponent(EntityId id, const std::string& name)
+    {
+        return hasComponent(id, componentNames_.at(name));
+    }
+
     template <typename T = void>
     T* addComponent(EntityId id, Component::Id compId)
     {
+        assert(!hasComponent(id, compId));
+        entities_[id].components.include(compId);
         return reinterpret_cast<T*>(componentPools_[compId].add(id));
     }
 
@@ -272,14 +307,57 @@ public:
         return componentNames_.at(name);
     }
 
+    ComponentMask getComponentMask(const Component& comp)
+    {
+        return ComponentMask(comp);
+    }
+
+    ComponentMask getComponentMask(const std::string& name)
+    {
+        return ComponentMask(componentNames_.at(name));
+    }
+
+    // I don't want to figure out how to give this the same name as the functions above
+    template <typename... Components>
+    ComponentMask getComponentsMask(const Components&... comps)
+    {
+        return (... + getComponentMask(comps));
+    }
+
+    template <typename Func>
+    void registerSystem(
+        const std::string& name, ComponentMask has, ComponentMask hasNot, Func&& func)
+    {
+        systems_.emplace(name, System { has, hasNot, std::forward<Func>(func) });
+    }
+
+    void invokeSystem(const std::string& name, float dt)
+    {
+        auto& system = systems_.at(name);
+        for (EntityId id = 0; id < entities_.size(); ++id) {
+            auto& entity = entities_[id];
+            if (entity.exists && entity.components.includes(system.has)
+                && entity.components.includesNot(system.hasNot)) {
+                system.function(id, dt);
+            }
+        }
+    }
+
 private:
     struct Entity {
         bool exists;
         ComponentMask components;
     };
 
+    struct System {
+        ComponentMask has;
+        ComponentMask hasNot;
+        std::function<void(EntityId, float)> function;
+    };
+
     std::vector<ComponentPool> componentPools_;
     boost::container::flat_map<std::string, Component::Id> componentNames_;
     std::vector<Entity> entities_;
     std::priority_queue<EntityId, std::vector<EntityId>, std::greater<>> entityIdFreeList_;
+    boost::container::flat_map<std::string, System> systems_;
 };
