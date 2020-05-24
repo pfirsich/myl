@@ -332,7 +332,7 @@ public:
     }
 
     // Implement foreachEntity in the future that returns a custom iterator.
-    std::vector<EntityId> getEntities(const ComponentMask& mask) const
+    std::vector<EntityId> getEntities(const ComponentMask& mask = ComponentMask()) const
     {
         std::vector<EntityId> ids;
         for (EntityId id = 0; id < entities_.size(); ++id) {
@@ -363,4 +363,57 @@ private:
     std::vector<Entity> entities_;
     std::priority_queue<EntityId, std::vector<EntityId>, std::greater<>> entityIdFreeList_;
     boost::container::flat_map<std::string, System> systems_;
+};
+
+template <typename T>
+class SystemData {
+public:
+    SystemData(World& world, Component::Id componentId)
+        : world_(world)
+        , boundComponent_(componentId)
+        , data_(sizeof(T), 64)
+    {
+    }
+
+    bool has(EntityId id) const
+    {
+        return data_.has(id);
+    }
+
+    template <typename... Args>
+    T& add(EntityId id, Args&&... args)
+    {
+        T* p = reinterpret_cast<T*>(data_.add(id));
+        return *new (p) T(std::forward<Args>(args)...);
+    }
+
+    template <bool addDefault = false>
+    T& get(EntityId id)
+    {
+        if constexpr (addDefault) {
+            if (!has(id))
+                return add(id);
+        }
+        return *reinterpret_cast<T*>(data_.get(id));
+    }
+
+    void remove(EntityId id)
+    {
+        T* ptr = reinterpret_cast<T*>(data_.get(id));
+        ptr->~T();
+        data_.remove(id);
+    }
+
+    void remove()
+    {
+        for (auto entityId : world_.getEntities()) {
+            if (has(entityId) && !world_.hasComponent(entityId, boundComponent_))
+                remove(entityId);
+        }
+    }
+
+private:
+    World& world_;
+    Component::Id boundComponent_;
+    ComponentPool data_;
 };

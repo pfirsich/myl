@@ -1,18 +1,21 @@
 #include "window.hpp"
 
-#include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
 namespace myl {
 namespace modules {
     namespace window {
         namespace {
-            template <typename... Args>
             std::unique_ptr<sf::RenderWindow>& getWindowPtr()
             {
                 static std::unique_ptr<sf::RenderWindow> window(nullptr);
                 return window;
             }
+        }
+
+        sf::RenderWindow& getWindow()
+        {
+            return *getWindowPtr();
         }
 
         void init(const std::string& name, size_t width, size_t height, bool fullscreen)
@@ -23,12 +26,12 @@ namespace modules {
 
         void setTitle(const std::string& title)
         {
-            getWindowPtr()->setTitle(title);
+            getWindow().setTitle(title);
         }
 
         bool update()
         {
-            auto& window = *getWindowPtr();
+            auto& window = getWindow();
             const auto open = window.isOpen();
             sf::Event event;
             while (window.pollEvent(event)) {
@@ -40,12 +43,12 @@ namespace modules {
 
         void clear()
         {
-            getWindowPtr()->clear(sf::Color::Black);
+            getWindow().clear(sf::Color::Black);
         }
 
         void present()
         {
-            getWindowPtr()->display();
+            getWindow().display();
         }
     }
 }

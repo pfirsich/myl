@@ -3,6 +3,9 @@
 #include <cassert>
 #include <iostream>
 
+#include "modules/timer.hpp"
+#include "modules/window.hpp"
+
 namespace Lua {
 
 static const auto lib = R"(
@@ -41,8 +44,8 @@ function myl.getComponents(entityId, component, ...)
     end
 end
 
-function myl.foreachEntity(...)
-    local buffer, count = myl._getEntities(...)
+function myl.foreachEntityFFF(...)
+    local buffer, count = myl._getEntityList(...)
     local array = ffi.cast("uint32_t*", buffer)
     local i = 0
     return function()
@@ -51,6 +54,7 @@ function myl.foreachEntity(...)
             i = i + 1
             return entity
         else
+            myl._freeEntityList(buffer)
             return nil
         end
     end
@@ -128,6 +132,25 @@ std::string getAsCString(const StructData& structData)
     return "";
 }
 
+void addWindowModule(sol::state& lua)
+{
+    std::cout << "Init service 'window'" << std::endl;
+    auto window = lua["myl"]["service"]["window"] = lua.create_table();
+    window["init"] = myl::modules::window::init;
+    window["setTitle"] = myl::modules::window::setTitle;
+    window["update"] = myl::modules::window::update;
+    window["clear"] = myl::modules::window::clear;
+    window["present"] = myl::modules::window::present;
+}
+
+void addTimerModule(sol::state& lua)
+{
+    std::cout << "Init service 'timer'" << std::endl;
+    auto timer = lua["myl"]["service"]["timer"] = lua.create_table();
+    timer["getTime"] = myl::modules::timer::getTime;
+    timer["getDelta"] = myl::modules::timer::getDelta;
+}
+
 void init(sol::state& lua, const ComponentFileData& componentData, World& world)
 {
     lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::ffi);
@@ -151,15 +174,31 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
         [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
             return world.getComponent(entityId, compId);
         });
-    myl["_getEntities"].set_function(
+    /*myl["_getEntities"].set_function(
         [&world](sol::variadic_args va) -> std::tuple<sol::lightuserdata_value, size_t> {
+            // TODO: Make this less horrible?
+            static std::vector<EntityId> entities;
             ComponentMask mask;
             for (auto v : va)
                 mask.include(v.as<Component::Id>());
             const auto entities = world.getEntities(mask);
             return std::make_tuple(
                 sol::lightuserdata_value(const_cast<EntityId*>(entities.data())), entities.size());
+        });*/
+
+    myl["foreachEntity"].set_function([&world](sol::variadic_args va) {
+        ComponentMask mask;
+        for (auto v : va)
+            mask.include(v.as<Component::Id>());
+        const auto entities = world.getEntities(mask);
+
+        size_t index = 0;
+        return sol::as_function([entities, index](sol::this_state L) mutable -> sol::object {
+            if (index < entities.size())
+                return sol::make_object(L, entities[index++]);
+            return sol::make_object(L, sol::nil);
         });
+    });
 
     myl["registerSystem"].set_function([&world](const std::string& name, sol::function function) {
         world.registerSystem(name, [function](float dt) { function(dt); });
@@ -167,10 +206,17 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
     myl["invokeSystem"].set_function(
         [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
 
-    myl["c"] = lua.create_table();
-
+    std::cout << "Load lib" << std::endl;
     lua.script(lib);
 
+    std::cout << "Init services" << std::endl;
+    myl["service"] = lua.create_table();
+    addWindowModule(lua);
+    addTimerModule(lua);
+
+    std::cout << "Init components" << std::endl;
+    myl["c"] = lua.create_table();
+    myl["_componentTypes"] = lua.create_table();
     for (const auto& [name, structData] : componentData.structs) {
         const auto code = Lua::getAsCString(structData);
         lua["ffi"]["cdef"](code);
