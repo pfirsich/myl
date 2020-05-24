@@ -5,6 +5,7 @@
 #include "componentfile.hpp"
 #include "ecs.hpp"
 #include "lua.hpp"
+#include "modules/timer.hpp"
 #include "modules/window.hpp"
 #include "struct.hpp"
 
@@ -34,10 +35,9 @@ struct RectangleRender {
     vec2 size;
 };
 
-template <typename T>
-constexpr T convert(bool v, const T& falseVal, const T& trueVal)
+float floatKey(sf::Keyboard::Key key)
 {
-    return v ? falseVal : trueVal;
+    return sf::Keyboard::isKeyPressed(key) ? 1.0f : 0.0f;
 }
 
 class PlayerInputSystem {
@@ -52,13 +52,9 @@ public:
         const auto cPlayerInputState = world_.getComponentId("PlayerInputState");
         for (auto entity : world_.getEntities(cPlayerInputState)) {
             auto input = world_.getComponent<PlayerInputState>(entity, cPlayerInputState);
-            const auto lr
-                = convert<float>(sf::Keyboard::isKeyPressed(sf::Keyboard::Right), 0.0f, 1.0f)
-                - convert<float>(sf::Keyboard::isKeyPressed(sf::Keyboard::Left), 0.0f, 1.0f);
-            const auto ud
-                = convert<float>(sf::Keyboard::isKeyPressed(sf::Keyboard::Down), 0.0f, 1.0f)
-                - convert<float>(sf::Keyboard::isKeyPressed(sf::Keyboard::Up), 0.0f, 1.0f);
-            const auto len = vec2 { lr, ud }.length();
+            const auto lr = floatKey(sf::Keyboard::Right) - floatKey(sf::Keyboard::Left);
+            const auto ud = floatKey(sf::Keyboard::Down) - floatKey(sf::Keyboard::Up);
+            const auto len = vec2 { lr, ud }.length() + 1.0e-9f;
             input->moveDir.x = lr / len;
             input->moveDir.y = ud / len;
         }
@@ -98,6 +94,39 @@ private:
     SystemData<sf::RectangleShape> shapes_;
 };
 
+class DrawFpsSystem {
+public:
+    DrawFpsSystem(World& world)
+        : world_(world)
+    {
+        text_.setFont(getFont());
+        text_.setCharacterSize(14);
+        text_.setFillColor(sf::Color::White);
+    }
+
+    void update(float dt)
+    {
+        const auto now = myl::modules::timer::getTime();
+        frames_.push(now);
+        while (now - frames_.front() > 1.0f)
+            frames_.pop();
+        text_.setString("FPS: " + std::to_string(frames_.size()));
+        myl::modules::window::getWindow().draw(text_);
+    }
+
+private:
+    static sf::Font& getFont()
+    {
+        static sf::Font font;
+        assert(font.loadFromFile("RobotoMono-Regular.ttf"));
+        return font;
+    }
+
+    World& world_;
+    sf::Text text_;
+    std::queue<double> frames_;
+};
+
 int main(int argc, char** argv)
 {
     std::vector<std::string> args(argv + 1, argv + argc);
@@ -126,6 +155,9 @@ int main(int argc, char** argv)
 
     RectangleRenderSystem rectangleRender(world);
     world.registerSystem("RectangleRenderSystem", [&](float dt) { rectangleRender.update(dt); });
+
+    DrawFpsSystem drawFpsSystem(world);
+    world.registerSystem("DrawFpsSystem", [&](float dt) { drawFpsSystem.update(dt); });
 
     sol::state lua;
     Lua::init(lua, componentData, world);

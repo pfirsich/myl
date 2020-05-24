@@ -3,13 +3,10 @@ local playerSpeed = 500
 myl.registerSystem(
     "PlayerMovementSystem",
     function(dt)
-        print("movement")
         for entity in myl.foreachEntity(myl.c.Transform, myl.c.PlayerInputState) do
-            print(entity)
-            local trafo, input = myl.getComponents(myl.cTransform, myl.c.PlayerInputState)
-            trafo.position.x = trafo.position.x + input.moveDir.x * playerSpeed * dt
-            trafo.position.y = trafo.position.y + input.moveDir.y * playerSpeed * dt
-            print("pos", trafo.position.x, trafo.position.y)
+            local trafo, pinput = myl.getComponents(entity, myl.c.Transform, myl.c.PlayerInputState)
+            trafo.position.x = trafo.position.x + pinput.moveDir.x * playerSpeed * dt
+            trafo.position.y = trafo.position.y + pinput.moveDir.y * playerSpeed * dt
         end
     end
 )
@@ -33,6 +30,7 @@ function myl.main()
         myl.invokeSystem("PlayerMovementSystem", dt)
         myl.service.window.clear()
         myl.invokeSystem("RectangleRenderSystem", dt)
+        myl.invokeSystem("DrawFpsSystem", dt)
         myl.service.window.present()
 
         if myl.service.input.getKeyboardDown("escape") then

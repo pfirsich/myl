@@ -23,8 +23,6 @@ include_directories(deps/sol2/single/include)
 
 include_directories(deps/glm)
 
-add_subdirectory(deps/spdlog)
-
 find_package(spdlog CONFIG REQUIRED)
 
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)

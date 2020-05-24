@@ -213,7 +213,14 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
     });
 
     myl["registerSystem"].set_function([&world](const std::string& name, sol::function function) {
-        world.registerSystem(name, [function](float dt) { function(dt); });
+        world.registerSystem(name, [function](float dt) {
+            const auto result = function(dt);
+            if (!result.valid()) {
+                const sol::error err = result;
+                std::cerr << "Error: " << err.what() << std::endl;
+                assert(false);
+            }
+        });
     });
     myl["invokeSystem"].set_function(
         [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
