@@ -38,8 +38,13 @@ int main(int argc, char** argv)
     lua.script_file(args[0]);
 
     std::cout << "Executing main()" << std::endl;
-    lua["myl"]["main"]();
-    std::cout << "Mainloop exited." << std::endl;
+    const auto result = lua["myl"]["main"]();
+    if (result.valid()) {
+        std::cout << "Mainloop exited." << std::endl;
+    } else {
+        const sol::error err = result;
+        std::cerr << "Error: " << err.what() << std::endl;
+    }
 
     return 0;
 }

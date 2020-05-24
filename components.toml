@@ -1,39 +1,28 @@
-[[enums]]
-name = "someEnum"
-# type = int
-values = ["x", "y", "z"]
-
 [[structs]]
-name = "foobar"
+name = "Transform"
+component = true
 fields = [
-    {name = "i", type = "u32"},
-    {name = "j", type = "u32"},
+    {name = "position", type = "vec2"},
+    {name = "angle", type = "f32"},
 ]
 
 [[structs]]
-name = "MoveComponent"
+name = "Velocity"
 component = true
 fields = [
-    {name = "id", type = "u32"},
-    {name = "flag", type = "bool"},
-    #{name = "c", type = "vec3"},
-    #{name = "d", type = "someEnum"},
-    #{name = "e", type = "foobar"},
-    #{name = "f", type = "foobar[32]"}, # array
-    #{name = "g", type = "foobar[]"}, # vector
-    #{name = "h", type = "foobar[string]"}, # map
+    {name = "value", type = "vec2"},
 ]
 
 [[structs]]
-name = "PositionComponent"
+name = "PlayerInputState"
 component = true
 fields = [
-    {name = "value", type = "vec2"}
+    {name = "moveDir", type = "vec2"},
 ]
 
 [[structs]]
-name = "VelocityComponent"
+name = "RectangleRender"
 component = true
 fields = [
-    {name = "value", type = "vec2"}
+    {name = "size", type = "vec2"}
 ]

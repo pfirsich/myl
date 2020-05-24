@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bitset>
+#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -325,22 +326,26 @@ public:
     }
 
     template <typename Func>
-    void registerSystem(
-        const std::string& name, ComponentMask has, ComponentMask hasNot, Func&& func)
+    void registerSystem(const std::string& name, Func&& func)
     {
-        systems_.emplace(name, System { has, hasNot, std::forward<Func>(func) });
+        systems_.emplace(name, System { std::forward<Func>(func) });
+    }
+
+    // Implement foreachEntity in the future that returns a custom iterator.
+    std::vector<EntityId> getEntities(const ComponentMask& mask) const
+    {
+        std::vector<EntityId> ids;
+        for (EntityId id = 0; id < entities_.size(); ++id) {
+            auto& entity = entities_[id];
+            if (entity.exists && entity.components.includes(mask))
+                ids.push_back(id);
+        }
+        return ids;
     }
 
     void invokeSystem(const std::string& name, float dt)
     {
-        auto& system = systems_.at(name);
-        for (EntityId id = 0; id < entities_.size(); ++id) {
-            auto& entity = entities_[id];
-            if (entity.exists && entity.components.includes(system.has)
-                && entity.components.includesNot(system.hasNot)) {
-                system.function(id, dt);
-            }
-        }
+        systems_.at(name).function(dt);
     }
 
 private:
@@ -350,9 +355,7 @@ private:
     };
 
     struct System {
-        ComponentMask has;
-        ComponentMask hasNot;
-        std::function<void(EntityId, float)> function;
+        std::function<void(float)> function;
     };
 
     std::vector<ComponentPool> componentPools_;

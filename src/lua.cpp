@@ -22,12 +22,38 @@ typedef struct {
 } vec4;
 ]]
 
+myl.c = {}
+myl._componentTypes = {}
+
 function myl.addComponent(entityId, component)
-    return ffi.cast(component .. "*", myl._addComponent(entityId, component))[0]
+    return ffi.cast(myl._componentTypes[component], myl._addComponent(entityId, component))[0]
 end
 
 function myl.getComponent(entityId, component)
-    return ffi.cast(component .. "*", myl._getComponent(entityId, component))[0]
+    return ffi.cast(myl._componentTypes[component], myl._getComponent(entityId, component))[0]
+end
+
+function myl.getComponents(entityId, component, ...)
+    if select("#", ...) == 0 then
+        return myl.getComponent(entityId, component)
+    else
+        return myl.getComponent(entityId, component), myl.getComponents(entityId, ...)
+    end
+end
+
+function myl.foreachEntity(...)
+    local buffer, count = myl._getEntities(...)
+    local array = ffi.cast("uint32_t*", buffer)
+    local i = 0
+    return function()
+        if i < count then
+            local entity = array[i]
+            i = i + 1
+            return entity
+        else
+            return nil
+        end
+    end
 end
 )";
 
@@ -107,45 +133,50 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
     lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::ffi);
 
     auto myl = lua.create_named_table("myl");
+
     myl["entityExists"].set_function(
         [&world](EntityId entityId) -> bool { return world.entityExists(entityId); });
     myl["newEntity"].set_function([&world]() -> EntityId { return world.newEntity(); });
     myl["destroyEntity"].set_function(
         [&world](EntityId entityId) -> void { world.destroyEntity(entityId); });
-    myl["removeComponent"].set_function(
-        [&world](EntityId entityId, const std::string& name) -> void {
-            world.removeComponent(entityId, name);
-        });
+
+    myl["removeComponent"].set_function([&world](EntityId entityId, Component::Id compId) -> void {
+        world.removeComponent(entityId, compId);
+    });
     myl["_addComponent"].set_function(
-        [&world](EntityId entityId, const std::string& name) -> sol::lightuserdata_value {
-            return world.addComponent(entityId, name);
+        [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
+            return world.addComponent(entityId, compId);
         });
     myl["_getComponent"].set_function(
-        [&world](EntityId entityId, const std::string& name) -> sol::lightuserdata_value {
-            return world.getComponent(entityId, name);
+        [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
+            return world.getComponent(entityId, compId);
         });
-    myl["registerSystem"].set_function(
-        [&world](const std::string& name, sol::as_table_t<std::vector<std::string>> components,
-            sol::function function) {
-            ComponentMask has, hasNot;
-            for (const auto& component : components.value()) {
-                if (component[0] == '!')
-                    hasNot.include(world.getComponentId(component.substr(1)));
-                else
-                    has.include(world.getComponentId(component));
-            }
-            std::cout << "has: " << has.getMask() << std::endl;
-            std::cout << "hasnot: " << hasNot.getMask() << std::endl;
-            world.registerSystem(name, has, hasNot,
-                [function](EntityId entityId, float dt) { function(entityId, dt); });
+    myl["_getEntities"].set_function(
+        [&world](sol::variadic_args va) -> std::tuple<sol::lightuserdata_value, size_t> {
+            ComponentMask mask;
+            for (auto v : va)
+                mask.include(v.as<Component::Id>());
+            const auto entities = world.getEntities(mask);
+            return std::make_tuple(
+                sol::lightuserdata_value(const_cast<EntityId*>(entities.data())), entities.size());
         });
+
+    myl["registerSystem"].set_function([&world](const std::string& name, sol::function function) {
+        world.registerSystem(name, [function](float dt) { function(dt); });
+    });
     myl["invokeSystem"].set_function(
         [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
+
+    myl["c"] = lua.create_table();
+
     lua.script(lib);
 
     for (const auto& [name, structData] : componentData.structs) {
         const auto code = Lua::getAsCString(structData);
         lua["ffi"]["cdef"](code);
+        const auto id = world.getComponentId(name);
+        myl["c"][name] = id;
+        myl["_componentTypes"][id] = name + "*";
     }
 }
 }

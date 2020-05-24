@@ -1,35 +1,21 @@
 myl.registerSystem(
-    "HarmonicForceSystem",
-    {"PositionComponent", "VelocityComponent"},
-    function(entity, dt)
-        print("harmonic")
-        local pos = myl.getComponent(entity, "PositionComponent")
-        local vel = myl.getComponent(entity, "VelocityComponent")
-        vel.value.x = vel.value.x + pos.value.x * 0.5 * dt
-        vel.value.y = vel.value.y + pos.value.y * 0.5 * dt
-    end
-)
-
-myl.registerSystem(
-    "MoveSystem",
-    {"PositionComponent", "VelocityComponent"},
-    function(entity, dt)
-        print("move")
-        local pos = myl.getComponent(entity, "PositionComponent")
-        local vel = myl.getComponent(entity, "VelocityComponent")
-        pos.value.x = pos.value.x + vel.value.x * dt
-        pos.value.y = pos.value.y + vel.value.y * dt
+    "PhysicsIntegrationSystem",
+    function(dt)
+        print("integrate")
+        for entity in myl.foreachEntity(myl.c.Transform, myl.c.Velocity) do
+            local trafo, vel = myl.getComponents(entity, myl.c.Transform, myl.c.Velocity)
+            trafo.position.x = trafo.position.x + vel.value.x * dt
+            trafo.position.y = trafo.position.y + vel.value.y * dt
+        end
     end
 )
 
 function myl.main()
     print("enter")
     e = myl.newEntity()
-    print("entity: ", e)
-    print("add harm")
-    myl.addComponent(e, "PositionComponent")
-    print("add move")
-    myl.addComponent(e, "VelocityComponent")
+    myl.addComponent(e, myl.c.Transform)
+    print("added trafo")
+    myl.addComponent(e, myl.c.Velocity)
 
     print("mainloop")
 
@@ -37,7 +23,9 @@ function myl.main()
     while true do
         local dt = 0
         --local dt = myl.service.timer.getDelta()
-        myl.invokeSystem("HarmonicForceSystem", dt)
-        myl.invokeSystem("MoveSystem", dt)
+        myl.invokeSystem("PhysicsIntegrationSystem", dt)
+        --myl.service.window.clear()
+        --myl.invokeSystem("RectangleRenderSystem", dt)
+        --myl.service.window.present()
     end
 end
