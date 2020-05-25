@@ -98,6 +98,8 @@ class DrawFpsSystem {
 public:
     DrawFpsSystem(World& world)
         : world_(world)
+        , frameCounter_(0)
+        , nextCalcFps_(myl::modules::timer::getTime() + 1.0)
     {
         text_.setFont(getFont());
         text_.setCharacterSize(14);
@@ -107,10 +109,12 @@ public:
     void update(float dt)
     {
         const auto now = myl::modules::timer::getTime();
-        frames_.push(now);
-        while (now - frames_.front() > 1.0f)
-            frames_.pop();
-        text_.setString("FPS: " + std::to_string(frames_.size()));
+        frameCounter_++;
+        if (nextCalcFps_ < now) {
+            nextCalcFps_ = now + 1.0;
+            text_.setString("FPS: " + std::to_string(frameCounter_));
+            frameCounter_ = 0;
+        }
         myl::modules::window::getWindow().draw(text_);
     }
 
@@ -124,7 +128,8 @@ private:
 
     World& world_;
     sf::Text text_;
-    std::queue<double> frames_;
+    size_t frameCounter_;
+    double nextCalcFps_;
 };
 
 int main(int argc, char** argv)
