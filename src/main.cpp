@@ -1,6 +1,8 @@
 #include <cmath>
 
 #include <SFML/Graphics.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "componentfile.hpp"
 #include "ecs.hpp"
@@ -9,30 +11,21 @@
 #include "modules/window.hpp"
 #include "struct.hpp"
 
-struct vec2 {
-    float x, y;
-
-    float length() const
-    {
-        return std::sqrt(x * x + y * y);
-    }
-};
-
 struct Transform {
-    vec2 position;
+    glm::vec2 position;
     float angle;
 };
 
 struct Velocity {
-    vec2 value;
+    glm::vec2 value;
 };
 
 struct PlayerInputState {
-    vec2 moveDir;
+    glm::vec2 moveDir;
 };
 
 struct RectangleRender {
-    vec2 size;
+    glm::vec2 size;
 };
 
 float floatKey(sf::Keyboard::Key key)
@@ -54,9 +47,8 @@ public:
             auto input = world_.getComponent<PlayerInputState>(entity, cPlayerInputState);
             const auto lr = floatKey(sf::Keyboard::Right) - floatKey(sf::Keyboard::Left);
             const auto ud = floatKey(sf::Keyboard::Down) - floatKey(sf::Keyboard::Up);
-            const auto len = vec2 { lr, ud }.length() + 1.0e-9f;
-            input->moveDir.x = lr / len;
-            input->moveDir.y = ud / len;
+            const auto moveDir = glm::vec2(lr, ud);
+            input->moveDir = moveDir / (moveDir.length() + 1.0e-9f);
         }
     }
 
