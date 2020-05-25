@@ -31,20 +31,4 @@ function myl.getComponents(entityId, component, ...)
     end
 end
 
-function myl.foreachEntityFFF(...)
-    local buffer, count = myl._getEntityList(...)
-    local array = ffi.cast("uint32_t*", buffer)
-    local i = 0
-    return function()
-        if i < count then
-            local entity = array[i]
-            i = i + 1
-            return entity
-        else
-            myl._freeEntityList(buffer)
-            return nil
-        end
-    end
-end
-
 --)luastring"--"

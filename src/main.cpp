@@ -132,20 +132,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto componentData = loadComponentFromFile("components.toml");
-    std::vector<Component> components;
-    for (const auto& [name, component] : componentData.structs) {
-        if (!component.isComponent)
-            continue;
+    World world;
 
-        StructBuilder sb;
-        for (const auto& [fieldName, fieldType] : component.structType.fields) {
-            sb.addField(fieldName, fieldType);
-        }
-        components.emplace_back(name, sb.build());
-    }
+    loadComponentsFromFile(world, "components.toml");
 
-    World world(components);
+    world.registerComponent("Transform",
+        StructBuilder()
+            .addField("position", &Transform::position)
+            .addField("angle", &Transform::angle)
+            .build());
 
     PlayerInputSystem playerInput(world);
     world.registerSystem("PlayerInput", [&](float dt) { playerInput.update(dt); });
@@ -157,7 +152,7 @@ int main(int argc, char** argv)
     world.registerSystem("DrawFps", [&](float dt) { drawFpsSystem.update(dt); });
 
     sol::state lua;
-    Lua::init(lua, componentData, world);
+    Lua::init(lua, world);
 
     std::cout << "Executing '" << args[0] << std::endl;
     lua.script_file(args[0]);

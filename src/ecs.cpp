@@ -8,6 +8,8 @@ ComponentPool::ComponentPool(size_t componentSize, size_t pageSize)
     : componentSize_(componentSize)
     , pageSize_(pageSize)
 {
+    if (pageSize_ == 0)
+        pageSize_ = 1024 / componentSize; // ~1KB per page
 }
 
 bool ComponentPool::has(EntityId entityId) const
@@ -152,15 +154,9 @@ ComponentMask::ComponentMask(const std::bitset<maxComponents>& mask)
 {
 }
 
-World::World(const std::vector<Component>& components)
+const std::vector<Component>& World::getComponents()
 {
-    componentPools_.reserve(components.size());
-    componentNames_.reserve(components.size());
-    for (const auto& component : components) {
-        // TODO: Page size has to be configurable at some point.
-        componentPools_.emplace_back(component.getStruct().getSize(), 64);
-        componentNames_.emplace(component.getName(), component.getId());
-    }
+    return components_;
 }
 
 bool World::entityExists(EntityId id) const

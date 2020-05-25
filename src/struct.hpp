@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 #include "fieldtype.hpp"
 
 /*
@@ -114,10 +116,38 @@ public:
 
     void addField(const std::string& name, std::shared_ptr<FieldType> type)
     {
+        const auto size = type->getSize();
         const auto alignment = type->getAlignment();
         currentOffset_ = align(currentOffset_, alignment);
-        fields_.emplace_back(
-            Struct::Field { name, type, currentOffset_, type->getSize(), alignment });
+        fields_.emplace_back(Struct::Field { name, type, currentOffset_, size, alignment });
+        currentOffset_ += size;
+    }
+
+    template <typename T>
+    void addField(const std::string& name)
+    {
+        static_assert(std::is_same_v<std::decay_t<T>, T>, "Please only use value types");
+        static_assert(std::is_same_v<T, void> && !std::is_same_v<T, void>,
+            "No specialization for this type.");
+    }
+
+    template <>
+    void addField<glm::vec2>(const std::string& name)
+    {
+        addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::vec2));
+    }
+
+    template <>
+    void addField<float>(const std::string& name)
+    {
+        addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::f32));
+    }
+
+    template <typename T, typename M>
+    StructBuilder addField(const std::string& name, M T::*field)
+    {
+        addField<M>(name);
+        return *this;
     }
 
     Struct build() const

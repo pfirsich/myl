@@ -8,8 +8,18 @@
 #include <boost/lexical_cast.hpp>
 #include <toml++/toml.h>
 
-#include "component.hpp"
 #include "fieldtype.hpp"
+
+struct StructData {
+    StructType structType;
+    std::string name;
+    bool isComponent;
+};
+
+struct ComponentFileData {
+    vector_map<std::string, EnumType> enums;
+    vector_map<std::string, StructData> structs;
+};
 
 std::optional<std::string> getBracketType(std::string_view str)
 {
@@ -133,4 +143,19 @@ ComponentFileData loadComponentFromFile(std::string_view path)
     }
 
     return data;
+}
+
+void loadComponentsFromFile(World& world, std::string_view path)
+{
+    const auto componentData = loadComponentFromFile(path);
+    for (const auto& [name, component] : componentData.structs) {
+        if (!component.isComponent)
+            continue;
+
+        StructBuilder sb;
+        for (const auto& [fieldName, fieldType] : component.structType.fields) {
+            sb.addField(fieldName, fieldType);
+        }
+        world.registerComponent(name, sb.build());
+    }
 }

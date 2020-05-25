@@ -7,7 +7,5 @@
 #include "../ecs.hpp"
 
 namespace Lua {
-std::string getAsCString(const StructData& structData);
-
-void init(sol::state& lua, const ComponentFileData& componentData, World& world);
+void init(sol::state& lua, World& world);
 }

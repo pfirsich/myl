@@ -16,7 +16,7 @@ constexpr auto maxComponents = 64;
 
 class ComponentPool {
 public:
-    ComponentPool(size_t componentSize, size_t pageSize);
+    ComponentPool(size_t componentSize, size_t pageSize = 0);
 
     bool has(EntityId entityId) const;
     void* add(EntityId entityId);
@@ -86,11 +86,27 @@ private:
 
 class World {
 public:
-    World(const std::vector<Component>& components);
+    World() = default;
 
     bool entityExists(EntityId id) const;
     EntityId newEntity();
     void destroyEntity(EntityId id);
+
+    template <typename... Args>
+    void registerComponent(const std::string& name, Args&&... args)
+    {
+        // Component names must be unique
+        assert(std::all_of(components_.begin(), components_.end(),
+            [&name](const Component& c) { return name != c.getName(); }));
+        components_.emplace_back(name, std::forward<Args>(args)...);
+
+        const Component& component = components_.back();
+        // TODO: Page size has to be configurable at some point.
+        componentPools_.emplace_back(component.getStruct().getSize());
+        componentNames_.emplace(component.getName(), component.getId());
+    }
+
+    const std::vector<Component>& getComponents();
 
     bool hasComponent(EntityId id, Component::Id compId);
 
@@ -132,6 +148,7 @@ private:
         std::function<void(float)> function;
     };
 
+    std::vector<Component> components_;
     std::vector<ComponentPool> componentPools_;
     boost::container::flat_map<std::string, Component::Id> componentNames_;
     std::vector<Entity> entities_;

@@ -1,12 +1,4 @@
 [[structs]]
-name = "Transform"
-component = true
-fields = [
-    {name = "position", type = "vec2"},
-    {name = "angle", type = "f32"},
-]
-
-[[structs]]
 name = "Velocity"
 component = true
 fields = [

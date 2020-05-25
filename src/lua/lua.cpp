@@ -78,14 +78,14 @@ std::string getCTypeName(std::shared_ptr<FieldType> fieldType)
         fieldType);
 }
 
-std::string getAsCString(const StructData& structData)
+std::string getAsCString(const Component& component)
 {
     std::stringstream ss;
     ss << "typedef struct {\n";
-    for (const auto& [fieldName, fieldType] : structData.structType.fields) {
-        ss << "    " << getCTypeName(fieldType) << " " << fieldName << ";\n";
+    for (const auto& field : component.getStruct().getFields()) {
+        ss << "    " << getCTypeName(field.type) << " " << field.name << ";\n";
     }
-    ss << "} " << structData.name;
+    ss << "} " << component.getName();
     return ss.str();
     return "";
 }
@@ -116,7 +116,7 @@ void addInputModule(sol::state& lua)
     input["getKeyboardDown"] = myl::modules::input::getKeyboardDown;
 }
 
-void init(sol::state& lua, const ComponentFileData& componentData, World& world)
+void init(sol::state& lua, World& world)
 {
     lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string,
         sol::lib::os, sol::lib::math, sol::lib::table, sol::lib::bit32, sol::lib::io, sol::lib::ffi,
@@ -144,17 +144,6 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
         [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
             return world.getComponent(entityId, compId);
         });
-    /*myl["_getEntities"].set_function(
-        [&world](sol::variadic_args va) -> std::tuple<sol::lightuserdata_value, size_t> {
-            // TODO: Make this less horrible?
-            static std::vector<EntityId> entities;
-            ComponentMask mask;
-            for (auto v : va)
-                mask.include(v.as<Component::Id>());
-            const auto entities = world.getEntities(mask);
-            return std::make_tuple(
-                sol::lightuserdata_value(const_cast<EntityId*>(entities.data())), entities.size());
-        });*/
 
     myl["foreachEntity"].set_function([&world](sol::variadic_args va) {
         ComponentMask mask;
@@ -197,9 +186,10 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
     std::cout << "Init components" << std::endl;
     myl["c"] = lua.create_table();
     myl["_componentTypes"] = lua.create_table();
-    for (const auto& [name, structData] : componentData.structs) {
-        const auto code = Lua::getAsCString(structData);
+    for (const auto& component : world.getComponents()) {
+        const auto code = Lua::getAsCString(component);
         lua["ffi"]["cdef"](code);
+        const auto& name = component.getName();
         const auto id = world.getComponentId(name);
         myl["c"][name] = id;
         myl["_componentTypes"][id] = name + "*";

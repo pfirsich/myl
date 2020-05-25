@@ -11,18 +11,22 @@ myl.registerSystem(
 )
 
 function myl.main()
+    local resX, resY = 1024, 768
+
     local entity = myl.newEntity()
     local trafo = myl.addComponent(entity, myl.c.Transform)
-    trafo.position = myl.vec2(512, 384)
+    trafo.position = myl.vec2(resX/2, resY/2)
     myl.addComponent(entity, myl.c.PlayerInputState)
     local rect = myl.addComponent(entity, myl.c.RectangleRender)
     rect.size = myl.vec2(50, 50)
 
-    myl.service.window.init("myl", 1024, 768, false)
+    myl.service.window.init("myl", resX, resY, false)
     while myl.service.window.update() do
         local dt = myl.service.timer.getDelta()
+
         myl.invokeSystem("PlayerInput", dt)
         myl.invokeSystem("PlayerMovement", dt)
+
         myl.service.window.clear()
         myl.invokeSystem("RectangleRender", dt)
         myl.invokeSystem("DrawFps", dt)
