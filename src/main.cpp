@@ -162,11 +162,16 @@ public:
                     const auto comp = world_.getComponent(entity, component.getId());
                     ss << component.getId() << ": " << component.getName();
                     ss << "(0x" << comp << ") = {";
+                    bool fieldComma = false;
                     for (const auto& field : component.getStruct().getFields()) {
+                        if (fieldComma)
+                            ss << ", ";
+                        fieldComma = true;
+
                         const auto fieldPtr = reinterpret_cast<const uint8_t*>(comp) + field.offset;
-                        ss << field.name << " = " << getFieldValueStr(field.type, fieldPtr) << ", ";
+                        ss << field.name << " = " << getFieldValueStr(field.type, fieldPtr);
                     }
-                    ss << "\n";
+                    ss << "}\n";
                 }
             }
             ss << "\n";
