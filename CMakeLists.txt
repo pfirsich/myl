@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(SRC
   componentfile.cpp
   fieldtype.cpp
-  lua.cpp
+  lua/lua.cpp
   modules/timer.cpp
   modules/window.cpp
   modules/input.cpp

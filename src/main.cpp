@@ -4,7 +4,7 @@
 
 #include "componentfile.hpp"
 #include "ecs.hpp"
-#include "lua.hpp"
+#include "lua/lua.hpp"
 #include "modules/timer.hpp"
 #include "modules/window.hpp"
 #include "struct.hpp"

@@ -3,15 +3,21 @@
 #include <cassert>
 #include <iostream>
 
-#include "modules/input.hpp"
-#include "modules/timer.hpp"
-#include "modules/window.hpp"
+#include "../modules/input.hpp"
+#include "../modules/timer.hpp"
+#include "../modules/window.hpp"
 
 namespace Lua {
 
-static const char lib[] =
-#include "lualib.lua"
-    ;
+// clang-format off
+static const char vec2lua[] =
+#include "vec2.lua"
+;
+
+static const char liblua[] =
+#include "lib.lua"
+;
+// clang-format on
 
 std::string getCTypeName(BuiltinFieldType::Type type)
 {
@@ -112,7 +118,9 @@ void addInputModule(sol::state& lua)
 
 void init(sol::state& lua, const ComponentFileData& componentData, World& world)
 {
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::ffi);
+    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string,
+        sol::lib::os, sol::lib::math, sol::lib::table, sol::lib::bit32, sol::lib::io, sol::lib::ffi,
+        sol::lib::jit, sol::lib::utf8);
 
     auto myl = lua.create_named_table("myl");
 
@@ -177,7 +185,8 @@ void init(sol::state& lua, const ComponentFileData& componentData, World& world)
         [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
 
     std::cout << "Load lib" << std::endl;
-    lua.script(lib);
+    lua.script(vec2lua);
+    lua.script(liblua);
 
     std::cout << "Init services" << std::endl;
     myl["service"] = lua.create_table();
