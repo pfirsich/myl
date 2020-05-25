@@ -33,6 +33,13 @@ float floatKey(sf::Keyboard::Key key)
     return sf::Keyboard::isKeyPressed(key) ? 1.0f : 0.0f;
 }
 
+static sf::Font& getFont()
+{
+    static sf::Font font;
+    assert(font.loadFromFile("RobotoMono-Regular.ttf"));
+    return font;
+}
+
 class PlayerInputSystem {
 public:
     PlayerInputSystem(World& world)
@@ -48,7 +55,7 @@ public:
             const auto lr = floatKey(sf::Keyboard::Right) - floatKey(sf::Keyboard::Left);
             const auto ud = floatKey(sf::Keyboard::Down) - floatKey(sf::Keyboard::Up);
             const auto moveDir = glm::vec2(lr, ud);
-            input->moveDir = moveDir / (moveDir.length() + 1.0e-9f);
+            input->moveDir = moveDir / (glm::length(moveDir) + 1.0e-9f);
         }
     }
 
@@ -111,17 +118,66 @@ public:
     }
 
 private:
-    static sf::Font& getFont()
-    {
-        static sf::Font font;
-        assert(font.loadFromFile("RobotoMono-Regular.ttf"));
-        return font;
-    }
-
     World& world_;
     sf::Text text_;
     size_t frameCounter_;
     double nextCalcFps_;
+};
+
+std::string getFieldValueStr(std::shared_ptr<FieldType> fieldType, const void* ptr)
+{
+    if (fieldType->fieldType == FieldType::builtin) {
+        auto ft = std::dynamic_pointer_cast<BuiltinFieldType>(fieldType);
+        switch (ft->type) {
+        case BuiltinFieldType::f32:
+            return std::to_string(*reinterpret_cast<const float*>(ptr));
+        case BuiltinFieldType::vec2:
+            return glm::to_string(*reinterpret_cast<const glm::vec2*>(ptr));
+        default:
+            return "unimplemented builtin type";
+        }
+    } else {
+        return "unimplemented field type";
+    }
+}
+
+class EntityInspectorSystem {
+public:
+    EntityInspectorSystem(World& world)
+        : world_(world)
+    {
+        text_.setFont(getFont());
+        text_.setCharacterSize(12);
+        text_.setFillColor(sf::Color::White);
+        text_.setOrigin(0.0f, -50.0f);
+    }
+
+    void update(float dt)
+    {
+        std::stringstream ss;
+        for (auto entity : world_.getEntities()) {
+            ss << "# Entity " << entity << "\n";
+            for (const auto& component : world_.getComponents()) {
+                if (world_.hasComponent(entity, component.getId())) {
+                    const auto comp = world_.getComponent(entity, component.getId());
+                    ss << component.getId() << ": " << component.getName();
+                    ss << "(0x" << comp << ") = {";
+                    for (const auto& field : component.getStruct().getFields()) {
+                        const auto fieldPtr = reinterpret_cast<const uint8_t*>(comp) + field.offset;
+                        ss << field.name << " = " << getFieldValueStr(field.type, fieldPtr) << ", ";
+                    }
+                    ss << "\n";
+                }
+            }
+            ss << "\n";
+        }
+        text_.setString(ss.str());
+        myl::modules::window::getWindow().draw(text_);
+    }
+
+private:
+    World& world_;
+    sf::Text text_;
 };
 
 int main(int argc, char** argv)
@@ -150,6 +206,9 @@ int main(int argc, char** argv)
 
     DrawFpsSystem drawFpsSystem(world);
     world.registerSystem("DrawFps", [&](float dt) { drawFpsSystem.update(dt); });
+
+    EntityInspectorSystem entityInspectorSystem(world);
+    world.registerSystem("EntityInspector", [&](float dt) { entityInspectorSystem.update(dt); });
 
     sol::state lua;
     Lua::init(lua, world);

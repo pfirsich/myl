@@ -14,11 +14,14 @@ function myl.main()
     local resX, resY = 1024, 768
 
     local entity = myl.newEntity()
-    local trafo = myl.addComponent(entity, myl.c.Transform)
-    trafo.position = myl.vec2(resX/2, resY/2)
+    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX/2, resY/2)
     myl.addComponent(entity, myl.c.PlayerInputState)
-    local rect = myl.addComponent(entity, myl.c.RectangleRender)
-    rect.size = myl.vec2(50, 50)
+    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
+
+    entity = myl.newEntity()
+    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(200, 200)
+    myl.addComponent(entity, myl.c.PlayerInputState)
+    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
 
     myl.service.window.init("myl", resX, resY, false)
     while myl.service.window.update() do
@@ -30,6 +33,7 @@ function myl.main()
         myl.service.window.clear()
         myl.invokeSystem("RectangleRender", dt)
         myl.invokeSystem("DrawFps", dt)
+        myl.invokeSystem("EntityInspector", dt)
         myl.service.window.present()
 
         if myl.service.input.getKeyboardDown("escape") then
