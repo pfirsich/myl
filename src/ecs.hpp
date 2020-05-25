@@ -162,7 +162,7 @@ public:
     SystemData(World& world, Component::Id componentId)
         : world_(world)
         , boundComponent_(componentId)
-        , data_(sizeof(T), 64)
+        , data_(sizeof(T))
     {
     }
 

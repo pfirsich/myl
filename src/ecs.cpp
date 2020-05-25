@@ -29,10 +29,11 @@ void* ComponentPool::add(EntityId entityId)
     auto& pageObj = pages_[page];
     if (!pageObj.data)
         pageObj.data = ::operator new(pageSize_* componentSize_);
-    std::memset(pageObj.data, 0, componentSize_);
     pageObj.occupied.set(index, true);
 
-    return getPointer(page, index);
+    auto ptr = getPointer(page, index);
+    std::memset(ptr, 0, componentSize_);
+    return ptr;
 }
 
 // No const overload, because you probably never have a const ComponentPool anyways
