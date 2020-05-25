@@ -12,6 +12,7 @@
 #include "struct.hpp"
 
 using EntityId = uint32_t;
+constexpr auto maxEntityId = std::numeric_limits<EntityId>::max();
 constexpr auto maxComponents = 64;
 
 class ComponentPool {

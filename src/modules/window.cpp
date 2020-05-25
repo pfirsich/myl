@@ -1,8 +1,11 @@
 #include "window.hpp"
 
 #include <SFML/Window.hpp>
+#include <imgui-SFML.h>
+#include <imgui.h>
 
 #include "input.hpp"
+#include "timer.hpp"
 
 namespace myl {
 namespace modules {
@@ -24,6 +27,7 @@ namespace modules {
         {
             getWindowPtr() = std::make_unique<sf::RenderWindow>(
                 sf::VideoMode(width, height), name, sf::Style::Default);
+            ImGui::SFML::Init(getWindow());
         }
 
         void setTitle(const std::string& title)
@@ -33,18 +37,29 @@ namespace modules {
 
         bool update()
         {
+            static double lastTime = timer::getTime();
+            const auto now = timer::getTime();
+            const auto dt = now - lastTime;
+            lastTime = now;
+
             auto& window = getWindow();
             const auto open = window.isOpen();
             input::internal::saveLastState();
             sf::Event event;
             while (window.pollEvent(event)) {
-                if (event.type == sf::Event::Closed)
+                ImGui::SFML::ProcessEvent(event);
+                if (event.type == sf::Event::Closed) {
                     window.close();
-                if (event.type == sf::Event::KeyPressed)
+                } else if (event.type == sf::Event::KeyPressed) {
                     input::internal::setState(static_cast<input::Key>(event.key.code), true);
-                if (event.type == sf::Event::KeyReleased)
+                } else if (event.type == sf::Event::KeyReleased) {
                     input::internal::setState(static_cast<input::Key>(event.key.code), false);
+                } else if (event.type == sf::Event::Resized) {
+                    sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+                    window.setView(sf::View(visibleArea));
+                }
             }
+            ImGui::SFML::Update(window, sf::seconds(dt));
             return open;
         }
 
@@ -55,6 +70,8 @@ namespace modules {
 
         void present()
         {
+            ImGui::EndFrame();
+            ImGui::SFML::Render(getWindow());
             getWindow().display();
         }
     }

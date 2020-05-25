@@ -28,9 +28,18 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 
+set(IMGUI_DIR deps/imgui)
+set(IMGUI_SFML_FIND_SFML ON)
+set(BUILD_SHARED_LIBS ON)
+add_subdirectory(deps/imgui-sfml)
+set(BUILD_SHARED_LIBS OFF)
+
 include_directories(deps/tomlplusplus/include)
 
 include(luajit)
 
 add_executable(myl ${SRC})
-target_link_libraries(myl spdlog::spdlog libluajit sfml-graphics sfml-window sfml-system)
+target_link_libraries(myl spdlog::spdlog)
+target_link_libraries(myl libluajit)
+target_link_libraries(myl sfml-graphics sfml-window sfml-system)
+target_link_libraries(myl ImGui-SFML::ImGui-SFML)
