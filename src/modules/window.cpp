@@ -2,6 +2,8 @@
 
 #include <SFML/Window.hpp>
 
+#include "input.hpp"
+
 namespace myl {
 namespace modules {
     namespace window {
@@ -33,10 +35,15 @@ namespace modules {
         {
             auto& window = getWindow();
             const auto open = window.isOpen();
+            input::internal::saveLastState();
             sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
                     window.close();
+                if (event.type == sf::Event::KeyPressed)
+                    input::internal::setState(static_cast<input::Key>(event.key.code), true);
+                if (event.type == sf::Event::KeyReleased)
+                    input::internal::setState(static_cast<input::Key>(event.key.code), false);
             }
             return open;
         }

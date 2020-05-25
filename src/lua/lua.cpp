@@ -113,7 +113,6 @@ void addInputModule(sol::state& lua)
 {
     std::cout << "Init service 'input'" << std::endl;
     auto input = lua["myl"]["service"]["input"] = lua.create_table();
-    input["update"] = myl::modules::input::update;
     input["getKeyboardDown"]
         = static_cast<bool (*)(const std::string&)>(myl::modules::input::getKeyboardDown);
     input["getKeyboardPressed"]

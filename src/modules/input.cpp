@@ -112,30 +112,43 @@ namespace modules {
             };
 
             constexpr auto maxKey = static_cast<size_t>(Key::last);
+
+            std::vector<uint8_t>& currentState()
+            {
+                static std::vector<uint8_t> s(maxKey, false);
+                return s;
+            }
+
+            std::vector<uint8_t>& lastDown()
+            {
+                static std::vector<uint8_t> s(maxKey, false);
+                return s;
+            }
         }
 
-        std::vector<bool>& getLastDownCache()
-        {
-            static std::vector<bool> lastDown(maxKey, false);
-            return lastDown;
-        }
+        namespace internal {
+            void setState(Key key, bool state)
+            {
+                currentState()[static_cast<size_t>(key)] = state;
+            }
 
-        void update()
-        {
-            auto& lastDown = getLastDownCache();
-            for (size_t i = 0; i < maxKey; ++i) {
-                lastDown[i] = getKeyboardDown(static_cast<Key>(i));
+            void saveLastState()
+            {
+                auto& ld = lastDown();
+                for (size_t i = 0; i < maxKey; ++i) {
+                    ld[i] = getKeyboardDown(static_cast<Key>(i));
+                }
             }
         }
 
         bool getLastDown(Key key)
         {
-            return getLastDownCache()[static_cast<size_t>(key)];
+            return lastDown()[static_cast<size_t>(key)];
         }
 
         bool getKeyboardDown(Key key)
         {
-            return sf::Keyboard::isKeyPressed(static_cast<sf::Keyboard::Key>(key));
+            return currentState()[static_cast<size_t>(key)];
         }
 
         bool getKeyboardDown(const std::string& keyName)

@@ -7,9 +7,12 @@
 #include "componentfile.hpp"
 #include "ecs.hpp"
 #include "lua/lua.hpp"
+#include "modules/input.hpp"
 #include "modules/timer.hpp"
 #include "modules/window.hpp"
 #include "struct.hpp"
+
+using namespace myl::modules;
 
 struct Transform {
     glm::vec2 position;
@@ -28,9 +31,9 @@ struct RectangleRender {
     glm::vec2 size;
 };
 
-float floatKey(sf::Keyboard::Key key)
+float floatKey(input::Key key)
 {
-    return sf::Keyboard::isKeyPressed(key) ? 1.0f : 0.0f;
+    return input::getKeyboardDown(key) ? 1.0f : 0.0f;
 }
 
 static sf::Font& getFont()
@@ -52,8 +55,8 @@ public:
         const auto cPlayerInputState = world_.getComponentId("PlayerInputState");
         for (auto entity : world_.getEntities(cPlayerInputState)) {
             auto input = world_.getComponent<PlayerInputState>(entity, cPlayerInputState);
-            const auto lr = floatKey(sf::Keyboard::Right) - floatKey(sf::Keyboard::Left);
-            const auto ud = floatKey(sf::Keyboard::Down) - floatKey(sf::Keyboard::Up);
+            const auto lr = floatKey(input::Key::right) - floatKey(input::Key::left);
+            const auto ud = floatKey(input::Key::down) - floatKey(input::Key::up);
             const auto moveDir = glm::vec2(lr, ud);
             input->moveDir = moveDir / (glm::length(moveDir) + 1.0e-9f);
         }
@@ -83,7 +86,7 @@ public:
             shape.setPosition(trafo->position.x, trafo->position.y);
             shape.setRotation(trafo->angle / M_PI * 180.0f);
             shape.setSize(sf::Vector2f(rectangleRender->size.x, rectangleRender->size.y));
-            myl::modules::window::getWindow().draw(shape);
+            window::getWindow().draw(shape);
         }
         shapes_.remove();
     }
@@ -98,7 +101,7 @@ public:
     DrawFpsSystem(World& world)
         : world_(world)
         , frameCounter_(0)
-        , nextCalcFps_(myl::modules::timer::getTime() + 1.0)
+        , nextCalcFps_(timer::getTime() + 1.0)
     {
         text_.setFont(getFont());
         text_.setCharacterSize(14);
@@ -107,14 +110,14 @@ public:
 
     void update(float dt)
     {
-        const auto now = myl::modules::timer::getTime();
+        const auto now = timer::getTime();
         frameCounter_++;
         if (nextCalcFps_ < now) {
             nextCalcFps_ = now + 1.0;
             text_.setString("FPS: " + std::to_string(frameCounter_));
             frameCounter_ = 0;
         }
-        myl::modules::window::getWindow().draw(text_);
+        window::getWindow().draw(text_);
     }
 
 private:
@@ -177,7 +180,7 @@ public:
             ss << "\n";
         }
         text_.setString(ss.str());
-        myl::modules::window::getWindow().draw(text_);
+        window::getWindow().draw(text_);
     }
 
 private:

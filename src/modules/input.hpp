@@ -112,8 +112,13 @@ namespace modules {
             last,
         };
 
-        // Call this at the end of input processing, so the input state can be saved for next frame!
-        void update();
+        namespace internal {
+            // We want the event queue in the window module to actually handle input,
+            // because it seems sf::Keyboard::isKeyPressed is very slow compared to keeping
+            // track of the input state manually by observing the input events.
+            void setState(Key key, bool state);
+            void saveLastState();
+        }
 
         bool getKeyboardDown(Key key);
         bool getKeyboardDown(const std::string& keyName);

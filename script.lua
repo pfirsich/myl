@@ -47,6 +47,5 @@ function myl.main()
         if myl.service.input.getKeyboardDown("escape") then
             break
         end
-        myl.service.input.update()
     end
 end
