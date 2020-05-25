@@ -1,7 +1,7 @@
 local playerSpeed = 500
 
 myl.registerSystem(
-    "PlayerMovementSystem",
+    "PlayerMovement",
     function(dt)
         for entity in myl.foreachEntity(myl.c.Transform, myl.c.PlayerInputState) do
             local trafo, pinput = myl.getComponents(entity, myl.c.Transform, myl.c.PlayerInputState)
@@ -21,11 +21,11 @@ function myl.main()
     myl.service.window.init("myl", 1024, 768, false)
     while myl.service.window.update() do
         local dt = myl.service.timer.getDelta()
-        myl.invokeSystem("PlayerInputSystem", dt)
-        myl.invokeSystem("PlayerMovementSystem", dt)
+        myl.invokeSystem("PlayerInput", dt)
+        myl.invokeSystem("PlayerMovement", dt)
         myl.service.window.clear()
-        myl.invokeSystem("RectangleRenderSystem", dt)
-        myl.invokeSystem("DrawFpsSystem", dt)
+        myl.invokeSystem("RectangleRender", dt)
+        myl.invokeSystem("DrawFps", dt)
         myl.service.window.present()
 
         if myl.service.input.getKeyboardDown("escape") then

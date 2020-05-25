@@ -156,13 +156,13 @@ int main(int argc, char** argv)
     World world(components);
 
     PlayerInputSystem playerInput(world);
-    world.registerSystem("PlayerInputSystem", [&](float dt) { playerInput.update(dt); });
+    world.registerSystem("PlayerInput", [&](float dt) { playerInput.update(dt); });
 
     RectangleRenderSystem rectangleRender(world);
-    world.registerSystem("RectangleRenderSystem", [&](float dt) { rectangleRender.update(dt); });
+    world.registerSystem("RectangleRender", [&](float dt) { rectangleRender.update(dt); });
 
     DrawFpsSystem drawFpsSystem(world);
-    world.registerSystem("DrawFpsSystem", [&](float dt) { drawFpsSystem.update(dt); });
+    world.registerSystem("DrawFps", [&](float dt) { drawFpsSystem.update(dt); });
 
     sol::state lua;
     Lua::init(lua, componentData, world);
