@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 set(SRC
   componentfile.cpp
+  ecs.cpp
   fieldtype.cpp
   lua/lua.cpp
   modules/timer.cpp
