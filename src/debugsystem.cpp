@@ -231,7 +231,8 @@ void DebugSystem::showEntityInspector()
 std::string DebugSystem::getComponentCaption(const Component& component, const void* ptr)
 {
     std::stringstream ss;
-    ss << component.getId() << ": " << component.getName() << " (0x" << ptr << ")";
+    ss << static_cast<size_t>(component.getId()) << ": " << component.getName() << " (0x" << ptr
+       << ")";
     return ss.str();
 }
 

@@ -41,20 +41,37 @@ private:
     std::vector<Page> pages_;
 };
 
+// This is just a class, so conversions between it and ComponentMask are nicer.
+// Since this is an Id (and not really an integer - e.g. arithmetic is not sane),
+// it's fine to wrap it, but mabe I should do it for EntityId too.
+class ComponentId {
+public:
+    static ComponentId getNew();
+
+    explicit ComponentId(size_t id)
+        : id_(id)
+    {
+    }
+
+    explicit operator size_t() const
+    {
+        return id_;
+    }
+
+private:
+    size_t id_;
+};
+
 class Component {
 public:
-    using Id = size_t;
-
     Component(const std::string& name, Struct&& s);
 
-    Id getId() const;
+    ComponentId getId() const;
     const std::string& getName() const;
     const Struct& getStruct() const;
 
 private:
-    static Id getComponentId();
-
-    Id id_;
+    ComponentId id_;
     std::string name_;
     Struct struct_;
 };
@@ -62,17 +79,17 @@ private:
 class ComponentMask {
 public:
     ComponentMask() = default;
-    ComponentMask(Component::Id id);
+    ComponentMask(ComponentId id);
 
-    bool includes(Component::Id id) const;
+    bool includes(ComponentId id) const;
     bool includes(const ComponentMask& other) const;
 
     // Returns true if none of the components in other are included in *this
     bool includesNot(const ComponentMask& other) const;
 
-    void include(Component::Id id);
+    void include(ComponentId id);
 
-    ComponentMask operator+(Component::Id id) const;
+    ComponentMask operator+(ComponentId id) const;
     ComponentMask operator+(const ComponentMask& other) const;
 
     void clear();
@@ -84,6 +101,8 @@ private:
 
     std::bitset<maxComponents> mask_;
 };
+
+ComponentMask operator+(ComponentId a, ComponentId b);
 
 class World {
 public:
@@ -104,8 +123,13 @@ public:
     World() = default;
 
     bool entityExists(EntityId id) const;
+
     EntityId newEntity();
+
     void destroyEntity(EntityId id);
+
+    // Implement foreachEntity in the future that returns a custom iterator.
+    std::vector<EntityId> getEntities(const ComponentMask& mask = ComponentMask()) const;
 
     template <typename... Args>
     void registerComponent(const std::string& name, Args&&... args)
@@ -123,25 +147,25 @@ public:
 
     const std::vector<Component>& getComponents();
 
-    bool hasComponent(EntityId id, Component::Id compId);
+    bool hasComponent(EntityId id, ComponentId compId);
 
     template <typename T = void>
-    T* addComponent(EntityId id, Component::Id compId)
+    T* addComponent(EntityId id, ComponentId compId)
     {
         assert(!hasComponent(id, compId));
         entities_[id].components.include(compId);
-        return reinterpret_cast<T*>(componentPools_[compId].add(id));
+        return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].add(id));
     }
 
     template <typename T = void>
-    T* getComponent(EntityId id, Component::Id compId)
+    T* getComponent(EntityId id, ComponentId compId)
     {
-        return reinterpret_cast<T*>(componentPools_[compId].get(id));
+        return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].get(id));
     }
 
-    void removeComponent(EntityId id, Component::Id compId);
+    void removeComponent(EntityId id, ComponentId compId);
 
-    Component::Id getComponentId(const std::string& name) const;
+    ComponentId getComponentId(const std::string& name) const;
 
     template <typename Func>
     void registerSystem(const std::string& name, Func&& func)
@@ -158,14 +182,9 @@ public:
             systemNames_.emplace(systems_[i].name, i);
     }
 
-    std::vector<System>& getSystems()
-    {
-        return systems_;
-    }
-
-    // Implement foreachEntity in the future that returns a custom iterator.
-    std::vector<EntityId> getEntities(const ComponentMask& mask = ComponentMask()) const;
     void invokeSystem(const std::string& name, float dt);
+
+    std::vector<System>& getSystems();
 
 private:
     struct Entity {
@@ -174,7 +193,7 @@ private:
     };
 
     std::vector<Component> components_;
-    boost::container::flat_map<std::string, Component::Id> componentNames_;
+    boost::container::flat_map<std::string, ComponentId> componentNames_;
     std::vector<ComponentPool> componentPools_;
 
     std::vector<Entity> entities_;
@@ -187,7 +206,7 @@ private:
 template <typename T>
 class SystemData {
 public:
-    SystemData(World& world, Component::Id componentId)
+    SystemData(World& world, ComponentId componentId)
         : world_(world)
         , boundComponent_(componentId)
         , data_(sizeof(T))
@@ -233,6 +252,6 @@ public:
 
 private:
     World& world_;
-    Component::Id boundComponent_;
+    ComponentId boundComponent_;
     ComponentPool data_;
 };

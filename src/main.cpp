@@ -78,8 +78,7 @@ public:
     {
         const auto cTransform = world_.getComponentId("Transform");
         const auto cRectangleRender = world_.getComponentId("RectangleRender");
-        const auto mask = ComponentMask(cTransform) + cRectangleRender;
-        for (auto entity : world_.getEntities(mask)) {
+        for (auto entity : world_.getEntities(cTransform + cRectangleRender)) {
             auto& shape = shapes_.get<true>(entity);
             auto trafo = world_.getComponent<Transform>(entity, cTransform);
             auto rectangleRender = world_.getComponent<RectangleRender>(entity, cRectangleRender);

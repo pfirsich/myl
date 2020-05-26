@@ -73,14 +73,21 @@ void* ComponentPool::getPointer(size_t page, size_t index)
     return reinterpret_cast<uint8_t*>(pages_[page].data) + componentSize_ * index;
 }
 
+ComponentId ComponentId::getNew()
+{
+    static size_t counter = 0;
+    assert(counter < maxComponents);
+    return ComponentId(counter++);
+}
+
 Component::Component(const std::string& name, Struct&& s)
-    : id_(getComponentId())
+    : id_(ComponentId::getNew())
     , name_(name)
     , struct_(s)
 {
 }
 
-Component::Id Component::getId() const
+ComponentId Component::getId() const
 {
     return id_;
 }
@@ -95,21 +102,14 @@ const Struct& Component::getStruct() const
     return struct_;
 }
 
-Component::Id Component::getComponentId()
+ComponentMask::ComponentMask(ComponentId id)
 {
-    static Id counter = 0;
-    assert(counter < maxComponents);
-    return counter++;
+    mask_.set(static_cast<size_t>(id), true);
 }
 
-ComponentMask::ComponentMask(Component::Id id)
+bool ComponentMask::includes(ComponentId id) const
 {
-    mask_.set(id, true);
-}
-
-bool ComponentMask::includes(Component::Id id) const
-{
-    return mask_.test(id);
+    return mask_.test(static_cast<size_t>(id));
 }
 
 bool ComponentMask::includes(const ComponentMask& other) const
@@ -123,15 +123,15 @@ bool ComponentMask::includesNot(const ComponentMask& other) const
     return (mask_ & other.mask_).none();
 }
 
-void ComponentMask::include(Component::Id id)
+void ComponentMask::include(ComponentId id)
 {
-    mask_.set(id, true);
+    mask_.set(static_cast<size_t>(id), true);
 }
 
-ComponentMask ComponentMask::operator+(Component::Id id) const
+ComponentMask ComponentMask::operator+(ComponentId id) const
 {
     ComponentMask mask(*this);
-    mask.mask_.set(id, true);
+    mask.mask_.set(static_cast<size_t>(id), true);
     return mask;
 }
 
@@ -153,6 +153,14 @@ auto ComponentMask::getMask() const
 ComponentMask::ComponentMask(const std::bitset<maxComponents>& mask)
     : mask_(mask)
 {
+}
+
+ComponentMask operator+(ComponentId a, ComponentId b)
+{
+    ComponentMask mask;
+    mask.include(a);
+    mask.include(b);
+    return mask;
 }
 
 const std::vector<Component>& World::getComponents()
@@ -184,7 +192,7 @@ void World::destroyEntity(EntityId id)
 {
     assert(entityExists(id));
     for (size_t compId = 0; compId < componentPools_.size(); ++compId) {
-        if (entities_[id].components.includes(compId)) {
+        if (entities_[id].components.includes(ComponentId(compId))) {
             componentPools_[compId].remove(id);
         }
     }
@@ -192,18 +200,18 @@ void World::destroyEntity(EntityId id)
     entityIdFreeList_.push(id);
 }
 
-bool World::hasComponent(EntityId id, Component::Id compId)
+bool World::hasComponent(EntityId id, ComponentId compId)
 {
     assert(entityExists(id));
     return entities_[id].components.includes(compId);
 }
 
-void World::removeComponent(EntityId id, Component::Id compId)
+void World::removeComponent(EntityId id, ComponentId compId)
 {
-    componentPools_[compId].remove(id);
+    componentPools_[static_cast<size_t>(compId)].remove(id);
 }
 
-Component::Id World::getComponentId(const std::string& name) const
+ComponentId World::getComponentId(const std::string& name) const
 {
     return componentNames_.at(name);
 }
@@ -228,4 +236,9 @@ void World::invokeSystem(const std::string& name, float dt)
         system.function(dt);
         system.lastDuration = getTime() - start;
     }
+}
+
+std::vector<World::System>& World::getSystems()
+{
+    return systems_;
 }

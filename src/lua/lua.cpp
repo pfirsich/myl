@@ -136,25 +136,25 @@ void init(sol::state& lua, World& world)
     myl["destroyEntity"].set_function(
         [&world](EntityId entityId) -> void { world.destroyEntity(entityId); });
 
-    myl["removeComponent"].set_function([&world](EntityId entityId, Component::Id compId) -> void {
-        world.removeComponent(entityId, compId);
+    myl["removeComponent"].set_function([&world](EntityId entityId, size_t compId) -> void {
+        world.removeComponent(entityId, ComponentId(compId));
     });
-    myl["hasComponent"].set_function([&world](EntityId entityId, Component::Id compId) -> bool {
-        return world.hasComponent(entityId, compId);
+    myl["hasComponent"].set_function([&world](EntityId entityId, size_t compId) -> bool {
+        return world.hasComponent(entityId, ComponentId(compId));
     });
     myl["_addComponent"].set_function(
-        [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
-            return world.addComponent(entityId, compId);
+        [&world](EntityId entityId, size_t compId) -> sol::lightuserdata_value {
+            return world.addComponent(entityId, ComponentId(compId));
         });
     myl["_getComponent"].set_function(
-        [&world](EntityId entityId, Component::Id compId) -> sol::lightuserdata_value {
-            return world.getComponent(entityId, compId);
+        [&world](EntityId entityId, size_t compId) -> sol::lightuserdata_value {
+            return world.getComponent(entityId, ComponentId(compId));
         });
 
     myl["foreachEntity"].set_function([&world](sol::variadic_args va) {
         ComponentMask mask;
         for (auto v : va)
-            mask.include(v.as<Component::Id>());
+            mask.include(ComponentId(v.as<size_t>()));
         const auto entities = world.getEntities(mask);
 
         size_t index = 0;
@@ -196,7 +196,7 @@ void init(sol::state& lua, World& world)
         const auto code = Lua::getAsCString(component);
         lua["ffi"]["cdef"](code);
         const auto& name = component.getName();
-        const auto id = world.getComponentId(name);
+        const auto id = static_cast<size_t>(world.getComponentId(name));
         myl["c"][name] = id;
         myl["_componentTypes"][id] = name + "*";
     }
