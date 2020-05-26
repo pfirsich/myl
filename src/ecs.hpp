@@ -149,10 +149,30 @@ public:
     template <typename T = void>
     T* getComponent(EntityId id, ComponentId compId)
     {
-        return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].get(id));
+        assert(hasComponent(id, compId));
+        return reinterpret_cast<T*>(getComponentBuffer(id, compId));
     }
 
     void removeComponent(EntityId id, ComponentId compId);
+
+    /*
+     * Enabling/Disabling: There are two places where a (in a way) an entity-component
+     * association is saved. Once here in the world (with a ComponentMask in Entity)
+     * and once more indirectly in the ComponentPool.
+     * Disabling essentially means removing the component from the mask, but keeping it
+     * in the pool. It is component removal without throwing away the data.
+     * Some implications:
+     * addComponent after setComponentDisabled just adds/enables it back without
+     * modifying/overwriting.
+     * removeComponent after setComponentDisabled throws away the data too.
+     */
+
+    void setComponentEnabled(EntityId id, ComponentId compId, bool enabled = true);
+    void setComponentDisabled(EntityId id, ComponentId compId);
+
+    // This is mostly for internal use? I need it in the Entity Inspector
+    bool isComponentAllocated(EntityId id, ComponentId compId);
+    void* getComponentBuffer(EntityId id, ComponentId compId);
 
     ComponentId getComponentId(const std::string& name) const;
 

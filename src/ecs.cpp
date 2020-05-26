@@ -222,8 +222,32 @@ bool World::hasComponent(EntityId id, ComponentId compId)
 
 void World::removeComponent(EntityId id, ComponentId compId)
 {
+    // This does not assert hasComponent, because we might remove a disabled component
     entities_[static_cast<size_t>(id)].components -= compId;
     componentPools_[static_cast<size_t>(compId)].remove(id);
+}
+
+void World::setComponentEnabled(EntityId id, ComponentId compId, bool enabled)
+{
+    if (enabled)
+        entities_[static_cast<size_t>(id)].components += compId;
+    else
+        entities_[static_cast<size_t>(id)].components -= compId;
+}
+
+void World::setComponentDisabled(EntityId id, ComponentId compId)
+{
+    setComponentEnabled(id, compId, false);
+}
+
+bool World::isComponentAllocated(EntityId id, ComponentId compId)
+{
+    return componentPools_[static_cast<size_t>(compId)].has(id);
+}
+
+void* World::getComponentBuffer(EntityId id, ComponentId compId)
+{
+    return componentPools_[static_cast<size_t>(compId)].get(id);
 }
 
 ComponentId World::getComponentId(const std::string& name) const

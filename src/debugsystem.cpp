@@ -8,7 +8,7 @@
 
 #include "util.hpp"
 
-static const size_t systemInspectorHeight = 450;
+static const size_t systemInspectorHeight = 400;
 
 DebugSystem::DebugSystem(World& world)
     : world_(world)
@@ -135,9 +135,9 @@ void DebugSystem::showSystemInspector()
             if (systems[i].name != "_Debug") {
                 ImGui::Checkbox(("##" + systems[i].name).c_str(), &systems[i].enabled);
                 ImGui::SameLine();
-                if (ImGui::Selectable(systems[i].name.c_str(), selectedSystem == i))
-                    selectedSystem = i;
             }
+            if (ImGui::Selectable(systems[i].name.c_str(), selectedSystem == i))
+                selectedSystem = i;
         }
         ImGui::EndChild();
     }
@@ -215,18 +215,25 @@ void DebugSystem::showEntityInspector()
 
         std::vector<const char*> addOptions;
         for (const auto& component : components) {
-            if (world_.hasComponent(entity, component.getId())) {
-                auto ptr = world_.getComponent(entity, component.getId());
+            const auto& name = component.getName();
+            const auto id = component.getId();
+            if (world_.isComponentAllocated(entity, id)) {
+                auto ptr = world_.getComponentBuffer(entity, id);
                 if (ImGui::CollapsingHeader(getComponentCaption(component, ptr).c_str(),
                         ImGuiTreeNodeFlags_DefaultOpen)) {
-                    if (ImGui::Button(("Remove##" + component.getName()).c_str(), ImVec2(0, 0))) {
-                        world_.removeComponent(entity, component.getId());
+                    bool enabled = world_.hasComponent(entity, id);
+                    ImGui::Checkbox(("enabled##" + name).c_str(), &enabled);
+                    world_.setComponentEnabled(entity, id, enabled);
+
+                    ImGui::SameLine();
+                    if (ImGui::Button(("Remove##" + name).c_str(), ImVec2(0, 0))) {
+                        world_.removeComponent(entity, id);
                         continue;
                     }
                     showComponentElements(component, ptr);
                 }
             } else {
-                addOptions.push_back(component.getName().c_str());
+                addOptions.push_back(name.c_str());
             }
         }
 
