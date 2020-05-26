@@ -185,7 +185,7 @@ void DebugSystem::showSystemInspector()
 
 void DebugSystem::showEntityInspector()
 {
-    static size_t selectedEntity = maxEntityId;
+    static EntityId selectedEntity = maxId<EntityId>();
 
     const auto entities = world_.getEntities();
 
@@ -200,7 +200,7 @@ void DebugSystem::showEntityInspector()
     {
         ImGui::BeginChild("entity list", ImVec2(200, 0), true);
         for (auto entity : entities) {
-            const auto title = "Entity " + std::to_string(entity);
+            const auto title = "Entity " + std::to_string(static_cast<size_t>(entity));
             if (ImGui::Selectable(title.c_str(), selectedEntity == entity))
                 selectedEntity = entity;
         }

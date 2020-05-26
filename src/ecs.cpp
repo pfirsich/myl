@@ -64,20 +64,14 @@ ComponentPool::Page::Page(size_t pageSize)
 
 std::pair<size_t, size_t> ComponentPool::getIndices(EntityId entityId) const
 {
-    return std::pair<size_t, size_t>(entityId / pageSize_, entityId % pageSize_);
+    const auto id = static_cast<size_t>(entityId);
+    return std::pair<size_t, size_t>(id / pageSize_, id % pageSize_);
 }
 
 void* ComponentPool::getPointer(size_t page, size_t index)
 {
     assert(pages_[page].data);
     return reinterpret_cast<uint8_t*>(pages_[page].data) + componentSize_ * index;
-}
-
-ComponentId ComponentId::getNew()
-{
-    static size_t counter = 0;
-    assert(counter < maxComponents);
-    return ComponentId(counter++);
 }
 
 Component::Component(const std::string& name, Struct&& s)
@@ -170,40 +164,43 @@ const std::vector<Component>& World::getComponents()
 
 bool World::entityExists(EntityId id) const
 {
-    return id < entities_.size() && entities_[id].exists;
+    const auto idx = static_cast<size_t>(id);
+    return idx < entities_.size() && entities_[idx].exists;
 }
 
 EntityId World::newEntity()
 {
     if (entityIdFreeList_.empty()) {
         entities_.push_back(Entity { true, ComponentMask() });
-        return entities_.size() - 1;
+        return EntityId(entities_.size() - 1);
     } else {
         const auto id = entityIdFreeList_.top();
         entityIdFreeList_.pop();
-        assert(id < entities_.size());
-        entities_[id].exists = true;
-        entities_[id].components.clear();
+        const auto idx = static_cast<size_t>(id);
+        assert(idx < entities_.size());
+        entities_[idx].exists = true;
+        entities_[idx].components.clear();
         return id;
     }
 }
 
 void World::destroyEntity(EntityId id)
 {
+    const auto idx = static_cast<size_t>(id);
     assert(entityExists(id));
     for (size_t compId = 0; compId < componentPools_.size(); ++compId) {
-        if (entities_[id].components.includes(ComponentId(compId))) {
+        if (entities_[idx].components.includes(ComponentId(compId))) {
             componentPools_[compId].remove(id);
         }
     }
-    entities_[id].exists = false;
+    entities_[idx].exists = false;
     entityIdFreeList_.push(id);
 }
 
 bool World::hasComponent(EntityId id, ComponentId compId)
 {
     assert(entityExists(id));
-    return entities_[id].components.includes(compId);
+    return entities_[static_cast<size_t>(id)].components.includes(compId);
 }
 
 void World::removeComponent(EntityId id, ComponentId compId)
@@ -220,10 +217,10 @@ ComponentId World::getComponentId(const std::string& name) const
 std::vector<EntityId> World::getEntities(const ComponentMask& mask) const
 {
     std::vector<EntityId> ids;
-    for (EntityId id = 0; id < entities_.size(); ++id) {
+    for (size_t id = 0; id < entities_.size(); ++id) {
         auto& entity = entities_[id];
         if (entity.exists && entity.components.includes(mask))
-            ids.push_back(id);
+            ids.push_back(EntityId(id));
     }
     return ids;
 }

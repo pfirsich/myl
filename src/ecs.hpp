@@ -9,11 +9,17 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/dynamic_bitset.hpp>
 
+#include "id.hpp"
 #include "struct.hpp"
 
-using EntityId = uint32_t;
-constexpr auto maxEntityId = std::numeric_limits<EntityId>::max();
+struct EntityIdTag {
+};
+using EntityId = Id<EntityIdTag, size_t>;
+
 constexpr auto maxComponents = 64;
+struct ComponentIdTag {
+};
+using ComponentId = Id<ComponentIdTag, size_t, maxComponents>;
 
 class ComponentPool {
 public:
@@ -39,27 +45,6 @@ private:
     size_t componentSize_;
     size_t pageSize_;
     std::vector<Page> pages_;
-};
-
-// This is just a class, so conversions between it and ComponentMask are nicer.
-// Since this is an Id (and not really an integer - e.g. arithmetic is not sane),
-// it's fine to wrap it, but mabe I should do it for EntityId too.
-class ComponentId {
-public:
-    static ComponentId getNew();
-
-    explicit ComponentId(size_t id)
-        : id_(id)
-    {
-    }
-
-    explicit operator size_t() const
-    {
-        return id_;
-    }
-
-private:
-    size_t id_;
 };
 
 class Component {
@@ -153,7 +138,7 @@ public:
     T* addComponent(EntityId id, ComponentId compId)
     {
         assert(!hasComponent(id, compId));
-        entities_[id].components.include(compId);
+        entities_[static_cast<size_t>(id)].components.include(compId);
         return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].add(id));
     }
 
@@ -197,7 +182,7 @@ private:
     std::vector<ComponentPool> componentPools_;
 
     std::vector<Entity> entities_;
-    std::priority_queue<EntityId, std::vector<EntityId>, std::greater<>> entityIdFreeList_;
+    std::priority_queue<EntityId, std::vector<EntityId>, IdGreater<EntityId>> entityIdFreeList_;
 
     std::vector<System> systems_;
     boost::container::flat_map<std::string, size_t> systemNames_;
