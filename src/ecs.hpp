@@ -162,9 +162,10 @@ public:
      * Disabling essentially means removing the component from the mask, but keeping it
      * in the pool. It is component removal without throwing away the data.
      * Some implications:
-     * addComponent after setComponentDisabled just adds/enables it back without
+     * - hasComponent is false for disabled components
+     * - addComponent after setComponentDisabled just adds/enables it back without
      * modifying/overwriting.
-     * removeComponent after setComponentDisabled throws away the data too.
+     * - removeComponent after setComponentDisabled throws away the data too.
      */
 
     void setComponentEnabled(EntityId id, ComponentId compId, bool enabled = true);
