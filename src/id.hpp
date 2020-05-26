@@ -1,7 +1,7 @@
 #include <cassert>
 #include <limits>
 
-// maxId is exclusive
+// maxUnderlyingVal is exclusive
 template <typename TagType, typename UnderlyingType,
     UnderlyingType maxUnderlyingVal = std::numeric_limits<UnderlyingType>::max()>
 class Id {
@@ -26,12 +26,12 @@ public:
         return id_;
     }
 
-    bool operator==(Id other)
+    constexpr bool operator==(Id other)
     {
         return id_ == static_cast<Underlying>(id_);
     }
 
-    bool operator!=(Id other)
+    constexpr bool operator!=(Id other)
     {
         return id_ == static_cast<Underlying>(id_);
     }
@@ -41,7 +41,7 @@ private:
 };
 
 template <typename IdType>
-IdType maxId()
+constexpr IdType maxId()
 {
     return IdType(IdType::maxUnderlyingValue);
 }
