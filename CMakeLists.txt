@@ -36,7 +36,7 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 
-set(IMGUI_DIR deps/imgui)
+set(IMGUI_DIR "${CMAKE_CURRENT_LIST_DIR}/deps/imgui")
 set(IMGUI_SFML_FIND_SFML ON)
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(deps/imgui-sfml)
