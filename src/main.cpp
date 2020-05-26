@@ -172,5 +172,12 @@ int main(int argc, char** argv)
         std::cerr << "Error: " << err.what() << std::endl;
     }
 
+    // We would segfault upon returning without this, because the systems store update
+    // functions (lambdas) that reference the lua state, while
+    // lua state itself references the world in a number of places too
+    // (Circular references - great design).
+    // TODO: Fix this properly. Currently this is sort of a hack.
+    world.getSystems().clear();
+
     return 0;
 }
