@@ -120,19 +120,9 @@ public:
     // Implement foreachEntity in the future that returns a custom iterator.
     std::vector<EntityId> getEntities(const ComponentMask& mask = ComponentMask()) const;
 
-    template <typename... Args>
-    void registerComponent(const std::string& name, Args&&... args)
-    {
-        // Component names must be unique
-        assert(std::all_of(components_.begin(), components_.end(),
-            [&name](const Component& c) { return name != c.getName(); }));
-        components_.emplace_back(name, std::forward<Args>(args)...);
+    void registerComponent(const std::string& name, Struct&& strct);
 
-        const Component& component = components_.back();
-        // TODO: Page size has to be configurable at some point.
-        componentPools_.emplace_back(component.getStruct().getSize());
-        componentNames_.emplace(component.getName(), component.getId());
-    }
+    const Component& getComponent(ComponentId compId) const;
 
     const std::vector<Component>& getComponents();
 
@@ -204,6 +194,8 @@ private:
 
     std::vector<Component> components_;
     boost::container::flat_map<std::string, ComponentId> componentNames_;
+    // componentPools_ needs to be below components_, so they are destroyed first,
+    // because they pools reference the Struct-s inside them.
     std::vector<ComponentPool> componentPools_;
 
     std::vector<Entity> entities_;

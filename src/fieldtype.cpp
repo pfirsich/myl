@@ -125,7 +125,8 @@ size_t BuiltinFieldType::getSize() const
     case Type::vec4:
         return sizeof(float[4]);
     case Type::string:
-        assert(false && "Unimplementd");
+        return sizeof(String);
+    default:
         return 0;
     };
 }
@@ -162,7 +163,8 @@ size_t BuiltinFieldType::getAlignment() const
     case Type::vec4:
         return std::alignment_of_v<float[4]>;
     case Type::string:
-        assert(false && "Unimplementd");
+        return std::alignment_of_v<String>;
+    default:
         return 0;
     };
 }

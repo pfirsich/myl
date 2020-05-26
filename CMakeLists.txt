@@ -6,6 +6,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${myl_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+#set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
 set(SRC
   componentfile.cpp
   debugsystem.cpp
@@ -36,7 +39,7 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 
-set(IMGUI_DIR deps/imgui)
+set(IMGUI_DIR "${CMAKE_CURRENT_LIST_DIR}/deps/imgui")
 set(IMGUI_SFML_FIND_SFML ON)
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(deps/imgui-sfml)

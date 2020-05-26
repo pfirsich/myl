@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "structstring.hpp"
+
 struct FieldType {
     enum Type { invalid, error, builtin, enum_, struct_, array, vector, map } fieldType;
 

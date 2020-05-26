@@ -14,6 +14,10 @@ static const char vec2lua[] =
 #include "vec2.lua"
 ;
 
+static const char mylstring[] =
+#include "string.lua"
+;
+
 static const char liblua[] =
 #include "lib.lua"
 ;
@@ -51,7 +55,7 @@ std::string getCTypeName(BuiltinFieldType::Type type)
     case BuiltinFieldType::Type::vec4:
         return "vec4";
     case BuiltinFieldType::Type::string:
-        assert(false && "string unimplemented");
+        return "MylString";
     };
 }
 
@@ -180,8 +184,9 @@ void init(sol::state& lua, World& world)
         [&world](const std::string& name, float dt) { world.invokeSystem(name, dt); });
 
     std::cout << "Load lib" << std::endl;
-    lua.script(vec2lua);
     lua.script(liblua);
+    lua.script(mylstring);
+    lua.script(vec2lua);
 
     std::cout << "Init services" << std::endl;
     myl["service"] = lua.create_table();

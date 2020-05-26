@@ -10,6 +10,9 @@ typedef struct {
 typedef struct {
     float x, y, z, w;
 } vec4;
+
+void* malloc(size_t size);
+void free(void *ptr);
 ]]
 
 myl.c = {}

@@ -14,7 +14,8 @@ function myl.main()
     local resX, resY = 1024, 768
 
     local entity = myl.newEntity()
-    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX/2, resY/2)
+    myl.addComponent(entity, myl.c.Name).value:set("FOOBAR")
+    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX / 2, resY / 2)
     myl.addComponent(entity, myl.c.PlayerInputState)
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
 
@@ -29,8 +30,7 @@ function myl.main()
     while myl.service.window.update() do
         local dt = myl.service.timer.getDelta()
 
-        if myl.service.input.getKeyboardDown("lctrl") and
-                myl.service.input.getKeyboardPressed("d") then
+        if myl.service.input.getKeyboardDown("lctrl") and myl.service.input.getKeyboardPressed("d") then
             debug = not debug
         end
 

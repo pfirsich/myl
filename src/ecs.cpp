@@ -223,8 +223,12 @@ bool World::hasComponent(EntityId id, ComponentId compId)
 void World::removeComponent(EntityId id, ComponentId compId)
 {
     // This does not assert hasComponent, because we might remove a disabled component
+    // If there isn't even a disabled component the ComponentPool::get will abort
+    const auto compIndex = static_cast<size_t>(compId);
+    auto ptr = componentPools_[compIndex].get(id);
+    components_[compIndex].getStruct().free(ptr);
     entities_[static_cast<size_t>(id)].components -= compId;
-    componentPools_[static_cast<size_t>(compId)].remove(id);
+    componentPools_[compIndex].remove(id);
 }
 
 void World::setComponentEnabled(EntityId id, ComponentId compId, bool enabled)
@@ -265,6 +269,27 @@ std::vector<EntityId> World::getEntities(const ComponentMask& mask) const
             ids.push_back(EntityId(id));
     }
     return ids;
+}
+
+void World::registerComponent(const std::string& name, Struct&& strct)
+{
+    // Component names must be unique
+    assert(std::all_of(components_.begin(), components_.end(),
+        [&name](const Component& c) { return name != c.getName(); }));
+    components_.emplace_back(name, std::forward<Struct>(strct));
+
+    const Component& component = components_.back();
+    // This whole design is horrible, because it assumes all components are registered
+    // in the world.
+    assert(static_cast<size_t>(component.getId()) == components_.size() - 1);
+    // TODO: Page size has to be configurable at some point.
+    componentPools_.emplace_back(component.getStruct().getSize());
+    componentNames_.emplace(component.getName(), component.getId());
+}
+
+const Component& World::getComponent(ComponentId compId) const
+{
+    return components_[static_cast<size_t>(compId)];
 }
 
 void World::invokeSystem(const std::string& name, float dt)

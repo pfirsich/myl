@@ -1,4 +1,11 @@
 [[structs]]
+name = "Name"
+component = true
+fields = [
+    {name = "value", type = "string"},
+]
+
+[[structs]]
 name = "Velocity"
 component = true
 fields = [

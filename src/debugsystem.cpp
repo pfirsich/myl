@@ -5,6 +5,7 @@
 
 #include <imgui.h>
 #include <implot.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 #include "util.hpp"
 
@@ -271,6 +272,12 @@ void DebugSystem::showFieldElement(const Struct::Field& field, void* ptr)
         case BuiltinFieldType::vec2:
             ImGui::InputFloat2(field.name.c_str(), reinterpret_cast<float*>(ptr));
             break;
+        case BuiltinFieldType::string: {
+            std::string text = reinterpret_cast<String*>(ptr)->str();
+            ImGui::InputText(field.name.c_str(), &text);
+            reinterpret_cast<String*>(ptr)->assign(text);
+            break;
+        }
         default:
             ImGui::Text("Unimplemented Builtin Type");
         }
