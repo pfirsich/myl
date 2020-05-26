@@ -154,7 +154,7 @@ void init(sol::state& lua, World& world)
     myl["foreachEntity"].set_function([&world](sol::variadic_args va) {
         ComponentMask mask;
         for (auto v : va)
-            mask.include(ComponentId(v.as<size_t>()));
+            mask += ComponentId(v.as<size_t>());
         const auto entities = world.getEntities(mask);
 
         size_t index = 0;

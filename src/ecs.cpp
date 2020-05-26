@@ -117,9 +117,14 @@ bool ComponentMask::includesNot(const ComponentMask& other) const
     return (mask_ & other.mask_).none();
 }
 
-void ComponentMask::include(ComponentId id)
+void ComponentMask::add(ComponentId id)
 {
     mask_.set(static_cast<size_t>(id), true);
+}
+
+void ComponentMask::remove(ComponentId id)
+{
+    mask_.set(static_cast<size_t>(id), false);
 }
 
 ComponentMask ComponentMask::operator+(ComponentId id) const
@@ -132,6 +137,18 @@ ComponentMask ComponentMask::operator+(ComponentId id) const
 ComponentMask ComponentMask::operator+(const ComponentMask& other) const
 {
     return ComponentMask(mask_ | other.mask_);
+}
+
+ComponentMask& ComponentMask::operator+=(ComponentId id)
+{
+    add(id);
+    return *this;
+}
+
+ComponentMask& ComponentMask::operator-=(ComponentId id)
+{
+    remove(id);
+    return *this;
 }
 
 void ComponentMask::clear()
@@ -152,8 +169,8 @@ ComponentMask::ComponentMask(const std::bitset<maxComponents>& mask)
 ComponentMask operator+(ComponentId a, ComponentId b)
 {
     ComponentMask mask;
-    mask.include(a);
-    mask.include(b);
+    mask.add(a);
+    mask.add(b);
     return mask;
 }
 
@@ -205,6 +222,7 @@ bool World::hasComponent(EntityId id, ComponentId compId)
 
 void World::removeComponent(EntityId id, ComponentId compId)
 {
+    entities_[static_cast<size_t>(id)].components -= compId;
     componentPools_[static_cast<size_t>(compId)].remove(id);
 }
 

@@ -122,7 +122,7 @@ void DebugSystem::enableForOneFrame()
 void DebugSystem::showSystemInspector()
 {
     auto& systems = world_.getSystems();
-    // static size_t selectedSystem = systems.size() + 1;
+    static size_t selectedSystem = systems.size() + 1;
 
     const ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, systemInspectorHeight), ImGuiCond_Once);
@@ -133,12 +133,11 @@ void DebugSystem::showSystemInspector()
         ImGui::BeginChild("system list", ImVec2(250, 0), true);
         for (size_t i = 0; i < systems.size(); ++i) {
             if (systems[i].name != "_Debug") {
-                ImGui::Checkbox(systems[i].name.c_str(), &systems[i].enabled);
-                // ImGui::SameLine();
-            } else
-                ImGui::Text("%s", systems[i].name.c_str());
-            // if (ImGui::Selectable(systems[i].name.c_str(), selectedSystem == i))
-            //    selectedSystem = i;
+                ImGui::Checkbox(("##" + systems[i].name).c_str(), &systems[i].enabled);
+                ImGui::SameLine();
+                if (ImGui::Selectable(systems[i].name.c_str(), selectedSystem == i))
+                    selectedSystem = i;
+            }
         }
         ImGui::EndChild();
     }
@@ -211,17 +210,35 @@ void DebugSystem::showEntityInspector()
     // Component Inspector
     if (world_.entityExists(selectedEntity)) {
         const auto entity = selectedEntity;
+        const auto& components = world_.getComponents();
         ImGui::BeginChild("components", ImVec2(0, 0), true);
-        for (const auto& component : world_.getComponents()) {
+
+        std::vector<const char*> addOptions;
+        for (const auto& component : components) {
             if (world_.hasComponent(entity, component.getId())) {
                 auto ptr = world_.getComponent(entity, component.getId());
                 if (ImGui::CollapsingHeader(getComponentCaption(component, ptr).c_str(),
                         ImGuiTreeNodeFlags_DefaultOpen)) {
+                    if (ImGui::Button(("Remove##" + component.getName()).c_str(), ImVec2(0, 0))) {
+                        world_.removeComponent(entity, component.getId());
+                        continue;
+                    }
                     showComponentElements(component, ptr);
                 }
+            } else {
+                addOptions.push_back(component.getName().c_str());
             }
         }
 
+        ImGui::Separator();
+
+        static int selected = -1;
+        ImGui::Combo("Component", &selected, &addOptions[0], addOptions.size());
+
+        if (ImGui::Button("Add Component###Button", ImVec2(-1, 0)) && selected != -1) {
+            world_.addComponent(entity, world_.getComponentId(addOptions[selected]));
+            selected = -1;
+        }
         ImGui::EndChild();
     }
 

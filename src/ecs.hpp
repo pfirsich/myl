@@ -72,10 +72,14 @@ public:
     // Returns true if none of the components in other are included in *this
     bool includesNot(const ComponentMask& other) const;
 
-    void include(ComponentId id);
+    void add(ComponentId id);
+    void remove(ComponentId id);
 
     ComponentMask operator+(ComponentId id) const;
     ComponentMask operator+(const ComponentMask& other) const;
+
+    ComponentMask& operator+=(ComponentId id);
+    ComponentMask& operator-=(ComponentId id);
 
     void clear();
 
@@ -138,7 +142,7 @@ public:
     T* addComponent(EntityId id, ComponentId compId)
     {
         assert(!hasComponent(id, compId));
-        entities_[static_cast<size_t>(id)].components.include(compId);
+        entities_[static_cast<size_t>(id)].components += compId;
         return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].add(id));
     }
 
