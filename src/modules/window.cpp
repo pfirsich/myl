@@ -18,6 +18,8 @@ namespace modules {
             }
         }
 
+        void setImguiStyle(); // imguistyle.cpp
+
         sf::RenderWindow& getWindow()
         {
             return *getWindowPtr();
@@ -28,6 +30,8 @@ namespace modules {
             getWindowPtr() = std::make_unique<sf::RenderWindow>(
                 sf::VideoMode(width, height), name, sf::Style::Default);
             ImGui::SFML::Init(getWindow());
+            setImguiStyle();
+            ImGui::SFML::UpdateFontTexture();
         }
 
         void setTitle(const std::string& title)

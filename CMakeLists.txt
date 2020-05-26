@@ -11,12 +11,13 @@ set(SRC
   debugsystem.cpp
   ecs.cpp
   fieldtype.cpp
+  imguistyle.cpp
   lua/lua.cpp
+  main.cpp
+  modules/input.cpp
   modules/timer.cpp
   modules/window.cpp
-  modules/input.cpp
   util.cpp
-  main.cpp
 )
 list(TRANSFORM SRC PREPEND src/)
 

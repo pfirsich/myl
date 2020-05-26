@@ -1,3 +1,5 @@
 .vscode/
 untracked/
 build/
+todo.md
+imgui.ini
