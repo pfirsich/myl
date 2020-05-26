@@ -24,6 +24,7 @@ function myl.main()
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
 
     myl.service.window.init("myl", resX, resY, false)
+    myl.service.window.setVSync(true)
     local debug = false
     while myl.service.window.update() do
         local dt = myl.service.timer.getDelta()
@@ -40,7 +41,7 @@ function myl.main()
         myl.invokeSystem("RectangleRender", dt)
         myl.invokeSystem("DrawFps", dt)
         if debug then
-            myl.invokeSystem("EntityInspector", dt)
+            myl.invokeSystem("_Debug", dt)
         end
         myl.service.window.present()
 

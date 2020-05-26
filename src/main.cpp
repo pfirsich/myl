@@ -5,6 +5,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <imgui.h>
 
+#include "debugsystem.hpp"
 #include "ecs.hpp"
 #include "lua/lua.hpp"
 #include "modules/input.hpp"
@@ -126,101 +127,6 @@ private:
     double nextCalcFps_;
 };
 
-class EntityInspectorSystem {
-public:
-    EntityInspectorSystem(World& world)
-        : world_(world)
-        , selectedEntity_(maxEntityId)
-    {
-        text_.setFont(getFont());
-        text_.setCharacterSize(12);
-        text_.setFillColor(sf::Color::White);
-        text_.setOrigin(0.0f, -50.0f);
-    }
-
-    void update(float dt)
-    {
-        const auto entities = world_.getEntities();
-
-        ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Entity Inspector");
-
-        // Entity List
-        {
-            ImGui::BeginChild("entity list", ImVec2(200, 0), true);
-            for (auto entity : entities) {
-                const auto title = "Entity " + std::to_string(entity);
-                if (ImGui::Selectable(title.c_str(), selectedEntity_ == entity))
-                    selectedEntity_ = entity;
-            }
-            ImGui::EndChild();
-        }
-        ImGui::SameLine();
-
-        // Component Inspector
-        if (world_.entityExists(selectedEntity_)) {
-            const auto entity = selectedEntity_;
-            ImGui::BeginChild("components", ImVec2(0, 0), true);
-            for (const auto& component : world_.getComponents()) {
-                if (world_.hasComponent(entity, component.getId())) {
-                    auto ptr = world_.getComponent(entity, component.getId());
-                    if (ImGui::CollapsingHeader(getComponentCaption(component, ptr).c_str(),
-                            ImGuiTreeNodeFlags_DefaultOpen)) {
-                        showComponentElements(component, ptr);
-                    }
-                }
-            }
-
-            ImGui::EndChild();
-        }
-
-        ImGui::End();
-
-        // ImGui::ShowDemoWindow(nullptr);
-    }
-
-private:
-    static std::string getComponentCaption(const Component& component, const void* ptr)
-    {
-        std::stringstream ss;
-        ss << component.getId() << ": " << component.getName() << " (0x" << ptr << ")";
-        return ss.str();
-    }
-
-    static void showFieldElement(const Struct::Field& field, void* ptr)
-    {
-        if (field.type->fieldType == FieldType::builtin) {
-            auto ft = std::dynamic_pointer_cast<BuiltinFieldType>(field.type);
-            switch (ft->type) {
-            case BuiltinFieldType::f32:
-                ImGui::InputFloat(field.name.c_str(), reinterpret_cast<float*>(ptr));
-                break;
-            case BuiltinFieldType::vec2:
-                ImGui::InputFloat2(field.name.c_str(), reinterpret_cast<float*>(ptr));
-                break;
-            default:
-                ImGui::Text("Unimplemented Builtin Type");
-            }
-        } else {
-            ImGui::Text("Unimplemented Field Type");
-        }
-    }
-
-    static void showComponentElements(const Component& component, void* ptr)
-    {
-        ImGui::LabelText("field", "value");
-        for (const auto& field : component.getStruct().getFields()) {
-            auto fieldPtr = reinterpret_cast<uint8_t*>(ptr) + field.offset;
-            showFieldElement(field, fieldPtr);
-        }
-    }
-
-    World& world_;
-    sf::Text text_;
-    EntityId selectedEntity_;
-};
-
 int main(int argc, char** argv)
 {
     std::vector<std::string> args(argv + 1, argv + argc);
@@ -248,8 +154,8 @@ int main(int argc, char** argv)
     DrawFpsSystem drawFpsSystem(world);
     world.registerSystem("DrawFps", [&](float dt) { drawFpsSystem.update(dt); });
 
-    EntityInspectorSystem entityInspectorSystem(world);
-    world.registerSystem("EntityInspector", [&](float dt) { entityInspectorSystem.update(dt); });
+    DebugSystem debugSystem(world);
+    world.registerSystem("_Debug", [&](float dt) { debugSystem.update(dt); });
 
     sol::state lua;
     Lua::init(lua, world);

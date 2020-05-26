@@ -87,6 +87,20 @@ private:
 
 class World {
 public:
+    struct System {
+        std::string name;
+        std::function<void(float)> function;
+        double lastDuration = 0.0;
+        bool enabled = true;
+
+        template <typename Func>
+        System(const std::string& name, Func&& func)
+            : name(name)
+            , function(std::forward<Func>(func))
+        {
+        }
+    };
+
     World() = default;
 
     bool entityExists(EntityId id) const;
@@ -132,7 +146,21 @@ public:
     template <typename Func>
     void registerSystem(const std::string& name, Func&& func)
     {
-        systems_.emplace(name, System { std::forward<Func>(func) });
+        // This is kind of a hack to sort the internal systems vector of World,
+        // but for some things I want it to be sorted.
+        auto it = systems_.begin();
+        while (it != systems_.end() && it->name < name)
+            it++;
+        systems_.emplace(it, name, std::forward<Func>(func));
+
+        systemNames_.clear();
+        for (size_t i = 0; i < systems_.size(); ++i)
+            systemNames_.emplace(systems_[i].name, i);
+    }
+
+    std::vector<System>& getSystems()
+    {
+        return systems_;
     }
 
     // Implement foreachEntity in the future that returns a custom iterator.
@@ -145,16 +173,15 @@ private:
         ComponentMask components;
     };
 
-    struct System {
-        std::function<void(float)> function;
-    };
-
     std::vector<Component> components_;
-    std::vector<ComponentPool> componentPools_;
     boost::container::flat_map<std::string, Component::Id> componentNames_;
+    std::vector<ComponentPool> componentPools_;
+
     std::vector<Entity> entities_;
     std::priority_queue<EntityId, std::vector<EntityId>, std::greater<>> entityIdFreeList_;
-    boost::container::flat_map<std::string, System> systems_;
+
+    std::vector<System> systems_;
+    boost::container::flat_map<std::string, size_t> systemNames_;
 };
 
 template <typename T>

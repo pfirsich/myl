@@ -96,6 +96,7 @@ void addWindowModule(sol::state& lua)
     auto window = lua["myl"]["service"]["window"] = lua.create_table();
     window["init"] = myl::modules::window::init;
     window["setTitle"] = myl::modules::window::setTitle;
+    window["setVSync"] = myl::modules::window::setVSync;
     window["update"] = myl::modules::window::update;
     window["clear"] = myl::modules::window::clear;
     window["present"] = myl::modules::window::present;

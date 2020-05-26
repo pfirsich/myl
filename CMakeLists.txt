@@ -8,15 +8,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 set(SRC
   componentfile.cpp
+  debugsystem.cpp
   ecs.cpp
   fieldtype.cpp
   lua/lua.cpp
   modules/timer.cpp
   modules/window.cpp
   modules/input.cpp
+  util.cpp
   main.cpp
 )
 list(TRANSFORM SRC PREPEND src/)
+
+include_directories(deps/implot)
+set(IMPLOT_SRC deps/implot/implot.cpp deps/implot/implot_demo.cpp)
+
+list(APPEND SRC ${IMPLOT_SRC})
 
 include_directories(include)
 

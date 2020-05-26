@@ -35,6 +35,11 @@ namespace modules {
             getWindow().setTitle(title);
         }
 
+        void setVSync(bool enabled)
+        {
+            getWindow().setVerticalSyncEnabled(enabled);
+        }
+
         bool update()
         {
             static double lastTime = timer::getTime();

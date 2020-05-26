@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "struct.hpp"
+#include "util.hpp"
 
 ComponentPool::ComponentPool(size_t componentSize, size_t pageSize)
     : componentSize_(componentSize)
@@ -222,5 +222,10 @@ std::vector<EntityId> World::getEntities(const ComponentMask& mask) const
 
 void World::invokeSystem(const std::string& name, float dt)
 {
-    systems_.at(name).function(dt);
+    auto& system = systems_[systemNames_.at(name)];
+    if (system.enabled) {
+        const auto start = getTime();
+        system.function(dt);
+        system.lastDuration = getTime() - start;
+    }
 }
