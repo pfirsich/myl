@@ -12,6 +12,8 @@
 #include "id.hpp"
 #include "struct.hpp"
 
+namespace myl {
+
 struct EntityIdTag {
 };
 using EntityId = Id<EntityIdTag, size_t>;
@@ -186,6 +188,9 @@ public:
 
     std::vector<System>& getSystems();
 
+    void setSystemEnabled(const std::string& name, bool enabled = true);
+    void setSystemDisabled(const std::string& name);
+
 private:
     struct Entity {
         bool exists;
@@ -194,8 +199,6 @@ private:
 
     std::vector<Component> components_;
     boost::container::flat_map<std::string, ComponentId> componentNames_;
-    // componentPools_ needs to be below components_, so they are destroyed first,
-    // because they pools reference the Struct-s inside them.
     std::vector<ComponentPool> componentPools_;
 
     std::vector<Entity> entities_;
@@ -205,9 +208,62 @@ private:
     boost::container::flat_map<std::string, size_t> systemNames_;
 };
 
+World& getDefaultWorld();
+
+bool entityExists(EntityId id);
+EntityId newEntity();
+void destroyEntity(EntityId id);
+std::vector<EntityId> getEntities(const ComponentMask& mask = ComponentMask());
+
+void registerComponent(const std::string& name, Struct&& strct);
+const Component& getComponent(ComponentId compId);
+const std::vector<Component>& getComponents();
+
+bool hasComponent(EntityId id, ComponentId compId);
+
+template <typename T = void>
+T* addComponent(EntityId id, ComponentId compId)
+{
+    return getDefaultWorld().addComponent<T>(id, compId);
+}
+
+template <typename T = void>
+T* getComponent(EntityId id, ComponentId compId)
+{
+    return getDefaultWorld().getComponent<T>(id, compId);
+}
+
+void removeComponent(EntityId id, ComponentId compId);
+
+void setComponentEnabled(EntityId id, ComponentId compId, bool enabled = true);
+void setComponentDisabled(EntityId id, ComponentId compId);
+
+bool isComponentAllocated(EntityId id, ComponentId compId);
+void* getComponentBuffer(EntityId id, ComponentId compId);
+
+ComponentId getComponentId(const std::string& name);
+
+template <typename Func>
+void registerSystem(const std::string& name, Func&& func)
+{
+    getDefaultWorld().registerSystem(name, std::forward<Func>(func));
+}
+
+void invokeSystem(const std::string& name, float dt);
+
+std::vector<World::System>& getSystems();
+
+void setSystemEnabled(const std::string& name, bool enabled = true);
+void setSystemDisabled(const std::string& name);
+
 template <typename T>
 class SystemData {
 public:
+    SystemData(ComponentId componentId)
+        : SystemData(getDefaultWorld(), componentId)
+    {
+    }
+
     SystemData(World& world, ComponentId componentId)
         : world_(world)
         , boundComponent_(componentId)
@@ -257,3 +313,5 @@ private:
     ComponentId boundComponent_;
     ComponentPool data_;
 };
+
+}

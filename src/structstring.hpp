@@ -4,6 +4,8 @@
 #include <cstring>
 #include <string>
 
+namespace myl {
+
 class String {
     static constexpr size_t minAllocSize = 32;
 
@@ -98,3 +100,5 @@ private:
     size_t size_ = 0; // in characters
     size_t capacity_ = 0; // (counts '\0' - the size of the buffer pointed to by data)
 };
+
+}

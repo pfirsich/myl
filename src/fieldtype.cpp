@@ -3,6 +3,8 @@
 #include <cassert>
 #include <sstream>
 
+namespace myl {
+
 FieldType::FieldType(Type fieldType)
     : fieldType(fieldType)
 {
@@ -286,4 +288,6 @@ std::string StructType::asString() const
     }
     ss << "}";
     return ss.str();
+}
+
 }

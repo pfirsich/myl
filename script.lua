@@ -1,3 +1,5 @@
+local input, timer, window = myl.service.input, myl.service.timer, myl.service.window
+
 local playerSpeed = 500
 
 myl.registerSystem(
@@ -24,28 +26,28 @@ function myl.main()
     myl.addComponent(entity, myl.c.PlayerInputState)
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
 
-    myl.service.window.init("myl", resX, resY, false)
-    myl.service.window.setVSync(true)
+    window.init("myl", resX, resY, false)
+    window.setVSync(true)
     local debug = false
-    while myl.service.window.update() do
-        local dt = myl.service.timer.getDelta()
+    myl.setSystemEnabled("_Debug", debug)
+    while window.update() do
+        local dt = timer.getDelta()
 
-        if myl.service.input.getKeyboardDown("lctrl") and myl.service.input.getKeyboardPressed("d") then
+        if input.getKeyboardDown("lctrl") and input.getKeyboardPressed("d") then
             debug = not debug
+            myl.setSystemEnabled("_Debug", debug)
         end
 
         myl.invokeSystem("PlayerInput", dt)
         myl.invokeSystem("PlayerMovement", dt)
 
-        myl.service.window.clear()
+        window.clear()
         myl.invokeSystem("RectangleRender", dt)
         myl.invokeSystem("DrawFps", dt)
-        if debug then
-            myl.invokeSystem("_Debug", dt)
-        end
-        myl.service.window.present()
+        myl.invokeSystem("_Debug", dt)
+        window.present()
 
-        if myl.service.input.getKeyboardDown("escape") then
+        if input.getKeyboardDown("escape") then
             break
         end
     end

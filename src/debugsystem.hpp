@@ -10,8 +10,6 @@
 
 class DebugSystem {
 public:
-    DebugSystem(World& world);
-
     void update(float dt);
 
 private:
@@ -23,11 +21,10 @@ private:
 
     void showEntityInspector();
 
-    static std::string getComponentCaption(const Component& component, const void* ptr);
-    static void showFieldElement(const Struct::Field& field, void* ptr);
-    static void showComponentElements(const Component& component, void* ptr);
+    static std::string getComponentCaption(const myl::Component& component, const void* ptr);
+    static void showFieldElement(const myl::Struct::Field& field, void* ptr);
+    static void showComponentElements(const myl::Component& component, void* ptr);
 
-    World& world_;
     bool showEntityInspector_ = false;
     bool showSystemInspector_ = false;
     bool showImGuiDemoWindow_ = false;

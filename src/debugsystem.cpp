@@ -11,16 +11,11 @@
 
 static const size_t systemInspectorHeight = 400;
 
-DebugSystem::DebugSystem(World& world)
-    : world_(world)
-{
-}
-
 void DebugSystem::update(float dt)
 {
-    auto& systems = world_.getSystems();
+    auto& systems = myl::getSystems();
 
-    const auto now = getTime();
+    const auto now = myl::getTime();
     timeRange_.x = now;
     timeRange_.y = now;
     for (size_t i = 0; i < systems.size(); ++i) {
@@ -104,14 +99,14 @@ void DebugSystem::showMiniMenu()
 
 void DebugSystem::setSystemsEnabled(bool enabled)
 {
-    for (auto& system : world_.getSystems())
+    for (auto& system : myl::getSystems())
         if (system.name != "_Debug")
             system.enabled = enabled;
 }
 
 void DebugSystem::enableForOneFrame()
 {
-    auto& systems = world_.getSystems();
+    auto& systems = myl::getSystems();
     for (size_t i = 0; i < systems.size(); ++i) {
         if (!systems[i].enabled) {
             systems[i].enabled = true;
@@ -122,7 +117,7 @@ void DebugSystem::enableForOneFrame()
 
 void DebugSystem::showSystemInspector()
 {
-    auto& systems = world_.getSystems();
+    auto& systems = myl::getSystems();
     static size_t selectedSystem = systems.size() + 1;
 
     const ImGuiIO& io = ImGui::GetIO();
@@ -185,9 +180,9 @@ void DebugSystem::showSystemInspector()
 
 void DebugSystem::showEntityInspector()
 {
-    static EntityId selectedEntity = maxId<EntityId>();
+    static auto selectedEntity = myl::maxId<myl::EntityId>();
 
-    const auto entities = world_.getEntities();
+    const auto entities = myl::getEntities();
 
     const ImGuiIO& io = ImGui::GetIO();
     const size_t width = 500;
@@ -209,26 +204,26 @@ void DebugSystem::showEntityInspector()
     ImGui::SameLine();
 
     // Component Inspector
-    if (world_.entityExists(selectedEntity)) {
+    if (myl::entityExists(selectedEntity)) {
         const auto entity = selectedEntity;
-        const auto& components = world_.getComponents();
+        const auto& components = myl::getComponents();
         ImGui::BeginChild("components", ImVec2(0, 0), true);
 
         std::vector<const char*> addOptions;
         for (const auto& component : components) {
             const auto& name = component.getName();
             const auto id = component.getId();
-            if (world_.isComponentAllocated(entity, id)) {
-                auto ptr = world_.getComponentBuffer(entity, id);
+            if (myl::isComponentAllocated(entity, id)) {
+                auto ptr = myl::getComponentBuffer(entity, id);
                 if (ImGui::CollapsingHeader(getComponentCaption(component, ptr).c_str(),
                         ImGuiTreeNodeFlags_DefaultOpen)) {
-                    bool enabled = world_.hasComponent(entity, id);
+                    bool enabled = myl::hasComponent(entity, id);
                     ImGui::Checkbox(("enabled##" + name).c_str(), &enabled);
-                    world_.setComponentEnabled(entity, id, enabled);
+                    myl::setComponentEnabled(entity, id, enabled);
 
                     ImGui::SameLine();
                     if (ImGui::Button(("Remove##" + name).c_str(), ImVec2(0, 0))) {
-                        world_.removeComponent(entity, id);
+                        myl::removeComponent(entity, id);
                         continue;
                     }
                     showComponentElements(component, ptr);
@@ -244,7 +239,7 @@ void DebugSystem::showEntityInspector()
         ImGui::Combo("Component", &selected, &addOptions[0], addOptions.size());
 
         if (ImGui::Button("Add Component###Button", ImVec2(-1, 0)) && selected != -1) {
-            world_.addComponent(entity, world_.getComponentId(addOptions[selected]));
+            myl::addComponent(entity, myl::getComponentId(addOptions[selected]));
             selected = -1;
         }
         ImGui::EndChild();
@@ -253,7 +248,7 @@ void DebugSystem::showEntityInspector()
     ImGui::End();
 }
 
-std::string DebugSystem::getComponentCaption(const Component& component, const void* ptr)
+std::string DebugSystem::getComponentCaption(const myl::Component& component, const void* ptr)
 {
     std::stringstream ss;
     ss << static_cast<size_t>(component.getId()) << ": " << component.getName() << " (0x" << ptr
@@ -261,21 +256,21 @@ std::string DebugSystem::getComponentCaption(const Component& component, const v
     return ss.str();
 }
 
-void DebugSystem::showFieldElement(const Struct::Field& field, void* ptr)
+void DebugSystem::showFieldElement(const myl::Struct::Field& field, void* ptr)
 {
-    if (field.type->fieldType == FieldType::builtin) {
-        auto ft = std::dynamic_pointer_cast<BuiltinFieldType>(field.type);
+    if (field.type->fieldType == myl::FieldType::builtin) {
+        auto ft = std::dynamic_pointer_cast<myl::BuiltinFieldType>(field.type);
         switch (ft->type) {
-        case BuiltinFieldType::f32:
+        case myl::BuiltinFieldType::f32:
             ImGui::InputFloat(field.name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case BuiltinFieldType::vec2:
+        case myl::BuiltinFieldType::vec2:
             ImGui::InputFloat2(field.name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case BuiltinFieldType::string: {
-            std::string text = reinterpret_cast<String*>(ptr)->str();
+        case myl::BuiltinFieldType::string: {
+            std::string text = reinterpret_cast<myl::String*>(ptr)->str();
             ImGui::InputText(field.name.c_str(), &text);
-            reinterpret_cast<String*>(ptr)->assign(text);
+            reinterpret_cast<myl::String*>(ptr)->assign(text);
             break;
         }
         default:
@@ -286,7 +281,7 @@ void DebugSystem::showFieldElement(const Struct::Field& field, void* ptr)
     }
 }
 
-void DebugSystem::showComponentElements(const Component& component, void* ptr)
+void DebugSystem::showComponentElements(const myl::Component& component, void* ptr)
 {
     ImGui::LabelText("field", "value");
     for (const auto& field : component.getStruct().getFields()) {

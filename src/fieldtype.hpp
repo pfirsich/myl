@@ -8,6 +8,8 @@
 
 #include "structstring.hpp"
 
+namespace myl {
+
 struct FieldType {
     enum Type { invalid, error, builtin, enum_, struct_, array, vector, map } fieldType;
 
@@ -158,4 +160,6 @@ void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
         traverse(func, mapFieldType->keyType);
         traverse(func, mapFieldType->valueType);
     }
+}
+
 }

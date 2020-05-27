@@ -6,6 +6,9 @@
 #include "../componentfile.hpp"
 #include "../ecs.hpp"
 
+namespace myl {
 namespace Lua {
-void init(sol::state& lua, World& world);
+    // No world parameter => lua has only access to default world (for now)
+    void init(sol::state& lua);
+}
 }

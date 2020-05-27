@@ -4,6 +4,8 @@
 
 #include "util.hpp"
 
+namespace myl {
+
 ComponentPool::ComponentPool(size_t componentSize, size_t pageSize)
     : componentSize_(componentSize)
     , pageSize_(pageSize)
@@ -305,4 +307,112 @@ void World::invokeSystem(const std::string& name, float dt)
 std::vector<World::System>& World::getSystems()
 {
     return systems_;
+}
+
+void World::setSystemEnabled(const std::string& name, bool enabled)
+{
+    systems_[systemNames_.at(name)].enabled = enabled;
+}
+
+void World::setSystemDisabled(const std::string& name)
+{
+    setSystemEnabled(name, false);
+}
+
+World& getDefaultWorld()
+{
+    static World world;
+    return world;
+}
+
+bool entityExists(EntityId id)
+{
+    return getDefaultWorld().entityExists(id);
+}
+
+EntityId newEntity()
+{
+    return getDefaultWorld().newEntity();
+}
+
+void destroyEntity(EntityId id)
+{
+    getDefaultWorld().destroyEntity(id);
+}
+
+std::vector<EntityId> getEntities(const ComponentMask& mask)
+{
+    return getDefaultWorld().getEntities(mask);
+}
+
+void registerComponent(const std::string& name, Struct&& strct)
+{
+    getDefaultWorld().registerComponent(name, std::forward<Struct>(strct));
+}
+
+const Component& getComponent(ComponentId compId)
+{
+    return getDefaultWorld().getComponent(compId);
+}
+
+const std::vector<Component>& getComponents()
+{
+    return getDefaultWorld().getComponents();
+}
+
+bool hasComponent(EntityId id, ComponentId compId)
+{
+    return getDefaultWorld().hasComponent(id, compId);
+}
+
+void removeComponent(EntityId id, ComponentId compId)
+{
+    getDefaultWorld().removeComponent(id, compId);
+}
+
+void setComponentEnabled(EntityId id, ComponentId compId, bool enabled)
+{
+    getDefaultWorld().setComponentEnabled(id, compId, enabled);
+}
+
+void setComponentDisabled(EntityId id, ComponentId compId)
+{
+    getDefaultWorld().setComponentDisabled(id, compId);
+}
+
+bool isComponentAllocated(EntityId id, ComponentId compId)
+{
+    return getDefaultWorld().isComponentAllocated(id, compId);
+}
+
+void* getComponentBuffer(EntityId id, ComponentId compId)
+{
+    return getDefaultWorld().getComponentBuffer(id, compId);
+}
+
+ComponentId getComponentId(const std::string& name)
+{
+    return getDefaultWorld().getComponentId(name);
+}
+
+void invokeSystem(const std::string& name, float dt)
+{
+    return getDefaultWorld().invokeSystem(name, dt);
+}
+
+std::vector<World::System>& getSystems()
+{
+    return getDefaultWorld().getSystems();
+}
+
+void setSystemEnabled(const std::string& name, bool enabled)
+{
+    getDefaultWorld().setSystemEnabled(name, enabled);
+}
+
+void setSystemDisabled(const std::string& name)
+{
+    getDefaultWorld().setSystemDisabled(name);
+}
+
 }

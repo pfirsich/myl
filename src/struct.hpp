@@ -10,6 +10,8 @@
 
 #include "fieldtype.hpp"
 
+namespace myl {
+
 /*
  * According to a conversation with someone more knowledgable:
  * Each platform bases it's structure layout (alignment, sizes)
@@ -159,3 +161,5 @@ private:
     std::vector<Struct::Field> fields_;
     size_t currentOffset_;
 };
+
+}

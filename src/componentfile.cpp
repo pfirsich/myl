@@ -10,6 +10,8 @@
 
 #include "fieldtype.hpp"
 
+namespace myl {
+
 struct StructData {
     StructType structType;
     std::string name;
@@ -158,4 +160,11 @@ void loadComponentsFromFile(World& world, std::string_view path)
         }
         world.registerComponent(name, sb.build());
     }
+}
+
+void loadComponentsFromFile(std::string_view path)
+{
+    loadComponentsFromFile(getDefaultWorld(), path);
+}
+
 }

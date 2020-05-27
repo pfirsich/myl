@@ -1,6 +1,8 @@
 #include <cassert>
 #include <limits>
 
+namespace myl {
+
 // maxUnderlyingVal is exclusive
 template <typename TagType, typename UnderlyingType,
     UnderlyingType maxUnderlyingVal = std::numeric_limits<UnderlyingType>::max()>
@@ -66,3 +68,5 @@ struct IdGreater {
             > static_cast<typename IdType::Underlying>(rhs);
     }
 };
+
+}
