@@ -29,7 +29,7 @@ static const char liblua[] =
     {
         switch (type) {
         case BuiltinFieldType::Type::invalid:
-            assert(false && "Invaid BuiltinFieldType");
+            assert(false && "Invalid BuiltinFieldType");
         case BuiltinFieldType::Type::bool_:
             return "bool";
         case BuiltinFieldType::Type::u8:
@@ -58,6 +58,8 @@ static const char liblua[] =
             return "vec4";
         case BuiltinFieldType::Type::string:
             return "MylString";
+        default:
+            assert(false && "Unknown BuiltinFieldType");
         };
     }
 

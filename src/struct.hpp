@@ -64,18 +64,6 @@ public:
             "No specialization for this type.");
     }
 
-    template <>
-    void addField<glm::vec2>(const std::string& name)
-    {
-        addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::vec2));
-    }
-
-    template <>
-    void addField<float>(const std::string& name)
-    {
-        addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::f32));
-    }
-
     template <typename T, typename M>
     StructBuilder addField(const std::string& name, M T::*field)
     {
@@ -89,5 +77,17 @@ private:
     std::vector<Struct::Field> fields_;
     size_t currentOffset_;
 };
+
+template <>
+inline void StructBuilder::addField<glm::vec2>(const std::string& name)
+{
+    addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::vec2));
+}
+
+template <>
+inline void StructBuilder::addField<float>(const std::string& name)
+{
+    addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::f32));
+}
 
 }
