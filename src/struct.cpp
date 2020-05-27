@@ -65,7 +65,7 @@ void Struct::freeField(std::shared_ptr<FieldType> fieldType, uint8_t* ptr)
     } else if (fieldType->fieldType == FieldType::vector) {
         const auto ft = std::dynamic_pointer_cast<VectorFieldType>(fieldType);
         auto vecPtr = reinterpret_cast<Vector*>(ptr);
-        for (size_t i = 0; vecPtr->getSize(); ++i)
+        for (size_t i = 0; i < vecPtr->getSize(); ++i)
             freeField(ft->elementType, reinterpret_cast<uint8_t*>(vecPtr->getPointer(i)));
         vecPtr->~Vector();
     } else if (fieldType->fieldType == FieldType::map) {
