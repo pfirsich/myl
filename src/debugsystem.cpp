@@ -226,6 +226,7 @@ void DebugSystem::showEntityInspector()
                         myl::removeComponent(entity, id);
                         continue;
                     }
+                    ImGui::Separator();
                     showComponentElements(component, ptr);
                 }
             } else {
@@ -256,36 +257,78 @@ std::string DebugSystem::getComponentCaption(const myl::Component& component, co
     return ss.str();
 }
 
-void DebugSystem::showFieldElement(const myl::Struct::Field& field, void* ptr)
+void DebugSystem::showFieldElement(
+    const std::string& name, std::shared_ptr<myl::FieldType> fieldType, void* ptr)
 {
-    if (field.type->fieldType == myl::FieldType::builtin) {
-        auto ft = std::dynamic_pointer_cast<myl::BuiltinFieldType>(field.type);
+    switch (fieldType->fieldType) {
+    case myl::FieldType::builtin: {
+        auto ft = std::dynamic_pointer_cast<myl::BuiltinFieldType>(fieldType);
         switch (ft->type) {
+        case myl::BuiltinFieldType::bool_:
+            ImGui::Checkbox(name.c_str(), reinterpret_cast<bool*>(ptr));
+            break;
+        case myl::BuiltinFieldType::u8:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_U8, ptr, nullptr, nullptr, "%u");
+            break;
+        case myl::BuiltinFieldType::i8:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_S8, ptr, nullptr, nullptr, "%d");
+            break;
+        case myl::BuiltinFieldType::u16:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_U16, ptr, nullptr, nullptr, "%u");
+            break;
+        case myl::BuiltinFieldType::i16:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_S16, ptr, nullptr, nullptr, "%d");
+            break;
+        case myl::BuiltinFieldType::u32:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_U32, ptr, nullptr, nullptr, "%u");
+            break;
+        case myl::BuiltinFieldType::i32:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_S32, ptr, nullptr, nullptr, "%d");
+            break;
+        case myl::BuiltinFieldType::u64:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_U64, ptr, nullptr);
+            break;
+        case myl::BuiltinFieldType::i64:
+            ImGui::InputScalar(name.c_str(), ImGuiDataType_S64, ptr, nullptr);
+            break;
         case myl::BuiltinFieldType::f32:
-            ImGui::InputFloat(field.name.c_str(), reinterpret_cast<float*>(ptr));
+            ImGui::InputFloat(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
         case myl::BuiltinFieldType::vec2:
-            ImGui::InputFloat2(field.name.c_str(), reinterpret_cast<float*>(ptr));
+            ImGui::InputFloat2(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
         case myl::BuiltinFieldType::string: {
             std::string text = reinterpret_cast<myl::String*>(ptr)->str();
-            ImGui::InputText(field.name.c_str(), &text);
+            ImGui::InputText(name.c_str(), &text);
             reinterpret_cast<myl::String*>(ptr)->assign(text);
             break;
         }
         default:
             ImGui::Text("Unimplemented Builtin Type");
+            break;
         }
-    } else {
+        break;
+    }
+    case myl::FieldType::array: {
+        auto ft = std::dynamic_pointer_cast<myl::ArrayFieldType>(fieldType);
+        if (ImGui::TreeNode(name.c_str())) {
+            for (size_t i = 0; i < ft->size; ++i) {
+                auto elemPtr = reinterpret_cast<uint8_t*>(ptr) + i * ft->elementType->getSize();
+                showFieldElement(std::to_string(i), ft->elementType, elemPtr);
+            }
+            ImGui::TreePop();
+        }
+        break;
+    }
+    default:
         ImGui::Text("Unimplemented Field Type");
     }
 }
 
 void DebugSystem::showComponentElements(const myl::Component& component, void* ptr)
 {
-    ImGui::LabelText("field", "value");
     for (const auto& field : component.getStruct().getFields()) {
         auto fieldPtr = reinterpret_cast<uint8_t*>(ptr) + field.offset;
-        showFieldElement(field, fieldPtr);
+        showFieldElement(field.name, field.type, fieldPtr);
     }
 }

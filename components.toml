@@ -6,6 +6,14 @@ fields = [
 ]
 
 [[structs]]
+name = "Numbers"
+component = true
+fields = [
+    {name = "use", type = "bool"},
+    {name = "numbers", type = "string[4]"},
+]
+
+[[structs]]
 name = "Velocity"
 component = true
 fields = [

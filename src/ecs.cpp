@@ -64,6 +64,11 @@ ComponentPool::Page::Page(size_t pageSize)
 {
 }
 
+ComponentPool::Page::~Page()
+{
+    ::operator delete(data);
+}
+
 std::pair<size_t, size_t> ComponentPool::getIndices(EntityId entityId) const
 {
     const auto id = static_cast<size_t>(entityId);
@@ -174,6 +179,20 @@ ComponentMask operator+(ComponentId a, ComponentId b)
     mask.add(a);
     mask.add(b);
     return mask;
+}
+
+World::~World()
+{
+    // We just have to make sure we call Struct::free here, because the componentPool
+    // can't do that itself. The actual freeing is however still done by the pool.
+    for (size_t compId = 0; compId < components_.size(); ++compId) {
+        auto& pool = componentPools_[compId];
+        auto& strct = components_[compId].getStruct();
+        for (size_t id = 0; id < entities_.size(); ++id) {
+            if (pool.has(EntityId(id)))
+                strct.free(pool.get(EntityId(id)));
+        }
+    }
 }
 
 const std::vector<Component>& World::getComponents()

@@ -39,6 +39,7 @@ private:
         boost::dynamic_bitset<> occupied;
 
         Page(size_t pageSize);
+        ~Page();
     };
 
     std::pair<size_t, size_t> getIndices(EntityId entityId) const;
@@ -112,6 +113,7 @@ public:
     };
 
     World() = default;
+    ~World();
 
     bool entityExists(EntityId id) const;
 
@@ -269,6 +271,14 @@ public:
         , boundComponent_(componentId)
         , data_(sizeof(T))
     {
+    }
+
+    ~SystemData()
+    {
+        for (auto entityId : world_.getEntities()) {
+            if (has(entityId))
+                remove(entityId);
+        }
     }
 
     bool has(EntityId id) const

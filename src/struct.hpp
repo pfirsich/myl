@@ -1,11 +1,5 @@
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <memory>
-#include <string>
-#include <vector>
-
 #include <glm/glm.hpp>
 
 #include "fieldtype.hpp"
@@ -21,13 +15,6 @@ namespace myl {
  */
 
 class Struct {
-private:
-    auto findField(const std::string& name) const
-    {
-        return std::find_if(fields_.begin(), fields_.end(),
-            [&name](const Field& field) { return field.name == name; });
-    }
-
 public:
     friend class StructBuilder;
 
@@ -39,85 +26,33 @@ public:
         size_t alignment;
     };
 
-    const std::vector<Field>& getFields() const
-    {
-        return fields_;
-    }
+    const std::vector<Field>& getFields() const;
 
-    size_t getSize() const
-    {
-        return size_;
-    }
+    size_t getSize() const;
 
-    size_t getAlignment() const
-    {
-        return alignment_;
-    }
+    size_t getAlignment() const;
 
-    void free(void* ptr) const
-    {
-        for (const auto& field : fields_)
-            freeField(field.type, reinterpret_cast<uint8_t*>(ptr) + field.offset);
-    }
+    void free(void* ptr) const;
 
 private:
-    Struct(const std::vector<Field>& fields, size_t size, size_t alignment)
-        : fields_(std::move(fields))
-        , size_(size)
-        , alignment_(alignment)
-    {
-    }
+    Struct(const std::vector<Field>& fields, size_t size, size_t alignment);
 
-    static void freeField(const std::shared_ptr<FieldType>& fieldType, uint8_t* ptr)
-    {
-        if (fieldType->fieldType == FieldType::builtin) {
-            const auto ft = std::dynamic_pointer_cast<BuiltinFieldType>(fieldType);
-            if (ft->type == BuiltinFieldType::string)
-                reinterpret_cast<String*>(ptr)->~String();
-        } else if (fieldType->fieldType == FieldType::array) {
-            const auto ft = std::dynamic_pointer_cast<ArrayFieldType>(fieldType);
-            for (size_t i = 0; i < ft->size; ++i)
-                freeField(ft->elementType, ptr + i * ft->elementType->getSize());
-        } else if (fieldType->fieldType == FieldType::vector) {
-            assert(false && "free vector field unimplemented");
-        } else if (fieldType->fieldType == FieldType::map) {
-            assert(false && "free map field unimplemented");
-        } else if (fieldType->fieldType == FieldType::struct_) {
-            assert(false && "free struct field unimplemented");
-        }
-    }
+    static void freeField(const std::shared_ptr<FieldType>& fieldType, uint8_t* ptr);
 
     std::vector<Field> fields_;
     size_t size_;
     size_t alignment_;
 };
 
-constexpr size_t padding(size_t offset, size_t alignment)
-{
-    const auto misalignment = offset % alignment;
-    return misalignment > 0 ? alignment - misalignment : 0;
-}
+constexpr size_t padding(size_t offset, size_t alignment);
 
-constexpr size_t align(size_t offset, size_t alignment)
-{
-    return offset + padding(offset, alignment);
-}
+constexpr size_t align(size_t offset, size_t alignment);
 
 class StructBuilder {
 public:
-    StructBuilder()
-        : currentOffset_(0)
-    {
-    }
+    StructBuilder();
 
-    void addField(const std::string& name, std::shared_ptr<FieldType> type)
-    {
-        const auto size = type->getSize();
-        const auto alignment = type->getAlignment();
-        currentOffset_ = align(currentOffset_, alignment);
-        fields_.emplace_back(Struct::Field { name, type, currentOffset_, size, alignment });
-        currentOffset_ += size;
-    }
+    void addField(const std::string& name, std::shared_ptr<FieldType> type);
 
     template <typename T>
     void addField(const std::string& name)
@@ -146,16 +81,7 @@ public:
         return *this;
     }
 
-    Struct build() const
-    {
-        const auto alignment = std::max_element(
-            fields_.begin(), fields_.end(), [](const auto& lhs, const auto& rhs) {
-                return lhs.alignment < rhs.alignment;
-            })->alignment;
-        const auto size = align(currentOffset_, alignment);
-
-        return Struct { fields_, size, alignment };
-    }
+    Struct build() const;
 
 private:
     std::vector<Struct::Field> fields_;
