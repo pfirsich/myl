@@ -17,7 +17,7 @@ ComponentPool::ComponentPool(size_t componentSize, size_t pageSize)
 bool ComponentPool::has(EntityId entityId) const
 {
     const auto [page, index] = getIndices(entityId);
-    return pages_.size() > page && pages_[page].occupied[index];
+    return pages_.size() > page && pages_[page].occupied.test(index);
 }
 
 void* ComponentPool::add(EntityId entityId)
@@ -25,12 +25,16 @@ void* ComponentPool::add(EntityId entityId)
     assert(!has(entityId));
     const auto [page, index] = getIndices(entityId);
 
-    if (page >= pages_.size())
-        pages_.resize(page + 1, Page(pageSize_));
+    if (page >= pages_.size()) {
+        const auto oldSize = pages_.size();
+        pages_.resize(page + 1);
+        for (size_t i = oldSize; i < pages_.size(); ++i)
+            pages_[i].occupied.resize(pageSize_);
+    }
 
     auto& pageObj = pages_[page];
     if (!pageObj.data)
-        pageObj.data = ::operator new(pageSize_* componentSize_);
+        pageObj.data.reset(::operator new(pageSize_* componentSize_));
     pageObj.occupied.set(index, true);
 
     auto ptr = getPointer(page, index);
@@ -53,20 +57,14 @@ void ComponentPool::remove(EntityId entityId)
     auto& pageObj = pages_[page];
     pageObj.occupied.set(index, false);
 
-    if (pageObj.occupied.none()) {
-        ::operator delete(pageObj.data);
-        pageObj.data = nullptr;
-    }
+    if (pageObj.occupied.none())
+        pageObj.data.reset();
 }
 
-ComponentPool::Page::Page(size_t pageSize)
-    : occupied(pageSize)
+ComponentPool::Page::Page()
+    : data(nullptr, [](void* p) { ::operator delete(p); })
+    , occupied()
 {
-}
-
-ComponentPool::Page::~Page()
-{
-    ::operator delete(data);
 }
 
 std::pair<size_t, size_t> ComponentPool::getIndices(EntityId entityId) const
@@ -78,7 +76,7 @@ std::pair<size_t, size_t> ComponentPool::getIndices(EntityId entityId) const
 void* ComponentPool::getPointer(size_t page, size_t index)
 {
     assert(pages_[page].data);
-    return reinterpret_cast<uint8_t*>(pages_[page].data) + componentSize_ * index;
+    return reinterpret_cast<uint8_t*>(pages_[page].data.get()) + componentSize_ * index;
 }
 
 Component::Component(const std::string& name, Struct&& s)

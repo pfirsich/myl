@@ -38,6 +38,11 @@ public:
         return id_ == static_cast<Underlying>(id_);
     }
 
+    std::string toString() const
+    {
+        return std::to_string(id_);
+    }
+
 private:
     Underlying id_;
 };

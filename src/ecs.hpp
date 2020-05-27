@@ -35,11 +35,10 @@ public:
 
 private:
     struct Page {
-        void* data = nullptr;
+        std::unique_ptr<void, void (*)(void*)> data;
         boost::dynamic_bitset<> occupied;
 
-        Page(size_t pageSize);
-        ~Page();
+        Page();
     };
 
     std::pair<size_t, size_t> getIndices(EntityId entityId) const;
@@ -293,6 +292,8 @@ public:
         return *new (p) T(std::forward<Args>(args)...);
     }
 
+    // addDefault is a template parameter, because this would not compile for
+    // non-default-constructible types T.
     template <bool addDefault = false>
     T& get(EntityId id)
     {

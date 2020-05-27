@@ -11,6 +11,7 @@
 #include "modules/input.hpp"
 #include "modules/timer.hpp"
 #include "modules/window.hpp"
+#include "util.hpp"
 
 using namespace myl::modules;
 
