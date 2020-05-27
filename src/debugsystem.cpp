@@ -178,6 +178,15 @@ void DebugSystem::showSystemInspector()
     ImGui::End();
 }
 
+std::string getEntityName(myl::EntityId id)
+{
+    static auto cName = myl::getComponentId("Name");
+    if (myl::hasComponent(id, cName))
+        // This is a hack. The component itself is not a String, but the only member is.
+        return myl::getComponent<myl::String>(id, cName)->str();
+    return "Entity " + id.toString();
+}
+
 void DebugSystem::showEntityInspector()
 {
     static auto selectedEntity = myl::maxId<myl::EntityId>();
@@ -194,11 +203,16 @@ void DebugSystem::showEntityInspector()
     // Entity List
     {
         ImGui::BeginChild("entity list", ImVec2(200, 0), true);
+
+        if (ImGui::Button("Create Entity"))
+            myl::newEntity();
+        ImGui::Separator();
+
         for (auto entity : entities) {
-            const auto title = "Entity " + std::to_string(static_cast<size_t>(entity));
-            if (ImGui::Selectable(title.c_str(), selectedEntity == entity))
+            if (ImGui::Selectable(getEntityName(entity).c_str(), selectedEntity == entity))
                 selectedEntity = entity;
         }
+
         ImGui::EndChild();
     }
     ImGui::SameLine();
@@ -207,7 +221,11 @@ void DebugSystem::showEntityInspector()
     if (myl::entityExists(selectedEntity)) {
         const auto entity = selectedEntity;
         const auto& components = myl::getComponents();
-        ImGui::BeginChild("components", ImVec2(0, 0), true);
+        ImGui::BeginChild("entity view", ImVec2(0, 0), true);
+
+        ImGui::Text("ID: %zu", static_cast<size_t>(selectedEntity));
+
+        ImGui::Separator();
 
         std::vector<const char*> addOptions;
         for (const auto& component : components) {
