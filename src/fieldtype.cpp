@@ -220,6 +220,16 @@ VectorFieldType::VectorFieldType(std::shared_ptr<FieldType> elementType)
 {
 }
 
+size_t VectorFieldType::getSize() const
+{
+    return sizeof(Vector);
+}
+
+size_t VectorFieldType::getAlignment() const
+{
+    return std::alignment_of_v<Vector>;
+}
+
 std::string VectorFieldType::asString() const
 {
     return "vector<" + elementType->asString() + ">";

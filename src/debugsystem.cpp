@@ -338,6 +338,25 @@ void DebugSystem::showFieldElement(
         }
         break;
     }
+    case myl::FieldType::vector: {
+        auto ft = std::dynamic_pointer_cast<myl::VectorFieldType>(fieldType);
+        if (ImGui::TreeNode(name.c_str())) {
+            auto& vec = *reinterpret_cast<myl::Vector*>(ptr);
+            if (ImGui::Button("Push"))
+                vec.pushBack();
+            ImGui::SameLine();
+            if (ImGui::Button("Pop"))
+                vec.popBack();
+            ImGui::Separator();
+
+            for (size_t i = 0; i < vec.getSize(); ++i) {
+                auto elemPtr = reinterpret_cast<uint8_t*>(vec.getData()) + i * vec.getElementSize();
+                showFieldElement(std::to_string(i), ft->elementType, elemPtr);
+            }
+            ImGui::TreePop();
+        }
+        break;
+    }
     default:
         ImGui::Text("Unimplemented Field Type");
     }

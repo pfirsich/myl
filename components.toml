@@ -6,11 +6,18 @@ fields = [
 ]
 
 [[structs]]
-name = "Numbers"
+name = "StringArray"
 component = true
 fields = [
     {name = "use", type = "bool"},
-    {name = "numbers", type = "string[4]"},
+    {name = "values", type = "string[4]"},
+]
+
+[[structs]]
+name = "Vector"
+component = true
+fields = [
+    {name = "values", type = "u32[]"},
 ]
 
 [[structs]]

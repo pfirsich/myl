@@ -20,6 +20,12 @@ size_t Struct::getAlignment() const
     return alignment_;
 }
 
+void Struct::init(void* ptr) const
+{
+    for (const auto& field : fields_)
+        initField(field.type, reinterpret_cast<uint8_t*>(ptr) + field.offset);
+}
+
 void Struct::free(void* ptr) const
 {
     for (const auto& field : fields_)
@@ -33,7 +39,20 @@ Struct::Struct(const std::vector<Field>& fields, size_t size, size_t alignment)
 {
 }
 
-void Struct::freeField(const std::shared_ptr<FieldType>& fieldType, uint8_t* ptr)
+void Struct::initField(std::shared_ptr<FieldType> fieldType, uint8_t* ptr)
+{
+    // TODO: I only need to do this once into some buffer and then memcpy that to new structs
+    // instead of doing it every time
+    if (fieldType->fieldType == FieldType::vector) {
+        const auto ft = std::dynamic_pointer_cast<VectorFieldType>(fieldType);
+        // Can't next vectors yet, because I don't know what constructor to call when you push back
+        // into them (elementSize)
+        assert(ft->elementType->fieldType != FieldType::vector);
+        new (ptr) Vector(ft->elementType->getSize());
+    }
+}
+
+void Struct::freeField(std::shared_ptr<FieldType> fieldType, uint8_t* ptr)
 {
     if (fieldType->fieldType == FieldType::builtin) {
         const auto ft = std::dynamic_pointer_cast<BuiltinFieldType>(fieldType);
@@ -44,7 +63,11 @@ void Struct::freeField(const std::shared_ptr<FieldType>& fieldType, uint8_t* ptr
         for (size_t i = 0; i < ft->size; ++i)
             freeField(ft->elementType, ptr + i * ft->elementType->getSize());
     } else if (fieldType->fieldType == FieldType::vector) {
-        assert(false && "free vector field unimplemented");
+        const auto ft = std::dynamic_pointer_cast<VectorFieldType>(fieldType);
+        auto vecPtr = reinterpret_cast<Vector*>(ptr);
+        for (size_t i = 0; vecPtr->getSize(); ++i)
+            freeField(ft->elementType, reinterpret_cast<uint8_t*>(vecPtr->getPointer(i)));
+        vecPtr->~Vector();
     } else if (fieldType->fieldType == FieldType::map) {
         assert(false && "free map field unimplemented");
     } else if (fieldType->fieldType == FieldType::struct_) {

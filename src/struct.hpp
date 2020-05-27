@@ -32,12 +32,14 @@ public:
 
     size_t getAlignment() const;
 
+    void init(void* ptr) const;
     void free(void* ptr) const;
 
 private:
     Struct(const std::vector<Field>& fields, size_t size, size_t alignment);
 
-    static void freeField(const std::shared_ptr<FieldType>& fieldType, uint8_t* ptr);
+    static void freeField(std::shared_ptr<FieldType> fieldType, uint8_t* ptr);
+    static void initField(std::shared_ptr<FieldType> fieldType, uint8_t* ptr);
 
     std::vector<Field> fields_;
     size_t size_;

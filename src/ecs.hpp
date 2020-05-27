@@ -135,8 +135,11 @@ public:
     T* addComponent(EntityId id, ComponentId compId)
     {
         assert(!hasComponent(id, compId));
+        const auto compIndex = static_cast<size_t>(compId);
         entities_[static_cast<size_t>(id)].components += compId;
-        return reinterpret_cast<T*>(componentPools_[static_cast<size_t>(compId)].add(id));
+        auto ptr = componentPools_[compIndex].add(id);
+        components_[compIndex].getStruct().init(ptr);
+        return reinterpret_cast<T*>(ptr);
     }
 
     template <typename T = void>

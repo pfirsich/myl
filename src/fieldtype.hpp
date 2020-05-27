@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "structstring.hpp"
+#include "structvector.hpp"
 
 namespace myl {
 
@@ -84,6 +85,8 @@ struct VectorFieldType : public FieldType {
     VectorFieldType(std::shared_ptr<FieldType> elementType);
 
     std::string asString() const override;
+    size_t getSize() const override;
+    size_t getAlignment() const override;
 };
 
 struct MapFieldType : public FieldType {

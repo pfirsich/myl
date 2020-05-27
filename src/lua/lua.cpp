@@ -77,7 +77,9 @@ static const char liblua[] =
                 else if constexpr (std::is_same_v<T, ArrayFieldType>)
                     return getCTypeName(arg->elementType) + "[" + std::to_string(arg->size) + "]";
                 else if constexpr (std::is_same_v<T, VectorFieldType>)
-                    assert(false && "VectorFieldType unimplemented");
+                    return "";
+                // return "MylVector_" + )
+                // assert(false && "VectorFieldType unimplemented");
                 else if constexpr (std::is_same_v<T, MapFieldType>)
                     assert(false && "MapFieldType unimplemented");
             },

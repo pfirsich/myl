@@ -48,6 +48,11 @@ public:
         size_ = size;
     }
 
+    void assign(const String& str)
+    {
+        assign(str.getData(), str.getSize());
+    }
+
     void assign(const char* str)
     {
         assign(str, std::strlen(str));
@@ -56,6 +61,12 @@ public:
     void assign(const std::string& str)
     {
         assign(str.data(), str.size());
+    }
+
+    String& operator=(const String& str)
+    {
+        assign(str);
+        return *this;
     }
 
     String& operator=(const char* str)
