@@ -280,51 +280,51 @@ void DebugSystem::showFieldElement(
 {
     switch (fieldType->fieldType) {
     case myl::FieldType::builtin: {
-        auto ft = std::dynamic_pointer_cast<myl::BuiltinFieldType>(fieldType);
+        auto ft = std::dynamic_pointer_cast<myl::PrimitiveFieldType>(fieldType);
         switch (ft->type) {
-        case myl::BuiltinFieldType::bool_:
+        case myl::PrimitiveFieldType::bool_:
             ImGui::Checkbox(name.c_str(), reinterpret_cast<bool*>(ptr));
             break;
-        case myl::BuiltinFieldType::u8:
+        case myl::PrimitiveFieldType::u8:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U8, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::BuiltinFieldType::i8:
+        case myl::PrimitiveFieldType::i8:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S8, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::BuiltinFieldType::u16:
+        case myl::PrimitiveFieldType::u16:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U16, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::BuiltinFieldType::i16:
+        case myl::PrimitiveFieldType::i16:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S16, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::BuiltinFieldType::u32:
+        case myl::PrimitiveFieldType::u32:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U32, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::BuiltinFieldType::i32:
+        case myl::PrimitiveFieldType::i32:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S32, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::BuiltinFieldType::u64:
+        case myl::PrimitiveFieldType::u64:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U64, ptr, nullptr);
             break;
-        case myl::BuiltinFieldType::i64:
+        case myl::PrimitiveFieldType::i64:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S64, ptr, nullptr);
             break;
-        case myl::BuiltinFieldType::f32:
+        case myl::PrimitiveFieldType::f32:
             ImGui::InputFloat(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::BuiltinFieldType::vec2:
+        case myl::PrimitiveFieldType::vec2:
             ImGui::InputFloat2(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::BuiltinFieldType::string: {
-            std::string text = reinterpret_cast<myl::String*>(ptr)->str();
-            ImGui::InputText(name.c_str(), &text);
-            reinterpret_cast<myl::String*>(ptr)->assign(text);
-            break;
-        }
         default:
             ImGui::Text("Unimplemented Builtin Type");
             break;
         }
+        break;
+    }
+    case myl::FieldType::string: {
+        std::string text = reinterpret_cast<myl::String*>(ptr)->str();
+        ImGui::InputText(name.c_str(), &text);
+        reinterpret_cast<myl::String*>(ptr)->assign(text);
         break;
     }
     case myl::FieldType::array: {

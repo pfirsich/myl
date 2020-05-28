@@ -9,7 +9,7 @@
 namespace myl {
 
 struct FieldType {
-    enum Type { invalid, error, builtin, enum_, struct_, array, vector, map } fieldType;
+    enum Type { invalid, error, builtin, string, enum_, struct_, array, vector, map } fieldType;
 
     FieldType(Type fieldType);
     virtual ~FieldType() = default;
@@ -29,7 +29,7 @@ struct ErrorFieldType : public FieldType {
     std::string asString() const override;
 };
 
-struct BuiltinFieldType : public FieldType {
+struct PrimitiveFieldType : public FieldType {
     enum Type {
         invalid,
         bool_,
@@ -45,12 +45,19 @@ struct BuiltinFieldType : public FieldType {
         vec2,
         vec3,
         vec4,
-        string
     } type;
 
     static const std::map<std::string, Type> typeFromString;
 
-    BuiltinFieldType(Type type);
+    PrimitiveFieldType(Type type);
+
+    std::string asString() const override;
+    size_t getSize() const override;
+    size_t getAlignment() const override;
+};
+
+struct StringFieldType : public FieldType {
+    StringFieldType();
 
     void free(void* ptr) const override;
     std::string asString() const override;
@@ -115,7 +122,7 @@ struct StructFieldType : public FieldType {
 };
 
 struct EnumType {
-    std::shared_ptr<BuiltinFieldType> underlyingType;
+    std::shared_ptr<PrimitiveFieldType> underlyingType;
     std::vector<std::pair<std::string, int64_t>> values;
 
     EnumType(const std::vector<std::string>& valueNames);
@@ -142,7 +149,9 @@ R visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
     case FieldType::error:
         return func(std::dynamic_pointer_cast<ErrorFieldType>(fieldType));
     case FieldType::builtin:
-        return func(std::dynamic_pointer_cast<BuiltinFieldType>(fieldType));
+        return func(std::dynamic_pointer_cast<PrimitiveFieldType>(fieldType));
+    case FieldType::string:
+        return func(std::dynamic_pointer_cast<StringFieldType>(fieldType));
     case FieldType::enum_:
         return func(std::dynamic_pointer_cast<EnumFieldType>(fieldType));
     case FieldType::struct_:

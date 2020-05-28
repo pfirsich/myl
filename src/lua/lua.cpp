@@ -25,39 +25,37 @@ static const char liblua[] =
 ;
     // clang-format on
 
-    std::string getCTypeName(BuiltinFieldType::Type type)
+    std::string getCTypeName(PrimitiveFieldType::Type type)
     {
         switch (type) {
-        case BuiltinFieldType::Type::invalid:
+        case PrimitiveFieldType::Type::invalid:
             assert(false && "Invalid BuiltinFieldType");
-        case BuiltinFieldType::Type::bool_:
+        case PrimitiveFieldType::Type::bool_:
             return "bool";
-        case BuiltinFieldType::Type::u8:
+        case PrimitiveFieldType::Type::u8:
             return "uint8_t";
-        case BuiltinFieldType::Type::i8:
+        case PrimitiveFieldType::Type::i8:
             return "int8_t";
-        case BuiltinFieldType::Type::u16:
+        case PrimitiveFieldType::Type::u16:
             return "uint16_t";
-        case BuiltinFieldType::Type::i16:
+        case PrimitiveFieldType::Type::i16:
             return "int16_t";
-        case BuiltinFieldType::Type::u32:
+        case PrimitiveFieldType::Type::u32:
             return "uint32_t";
-        case BuiltinFieldType::Type::i32:
+        case PrimitiveFieldType::Type::i32:
             return "int32_t";
-        case BuiltinFieldType::Type::u64:
+        case PrimitiveFieldType::Type::u64:
             return "uint64_t";
-        case BuiltinFieldType::Type::i64:
+        case PrimitiveFieldType::Type::i64:
             return "int64_t";
-        case BuiltinFieldType::Type::f32:
+        case PrimitiveFieldType::Type::f32:
             return "float";
-        case BuiltinFieldType::Type::vec2:
+        case PrimitiveFieldType::Type::vec2:
             return "vec2";
-        case BuiltinFieldType::Type::vec3:
+        case PrimitiveFieldType::Type::vec3:
             return "vec3";
-        case BuiltinFieldType::Type::vec4:
+        case PrimitiveFieldType::Type::vec4:
             return "vec4";
-        case BuiltinFieldType::Type::string:
-            return "MylString";
         default:
             assert(false && "Unknown BuiltinFieldType");
         };
@@ -70,8 +68,10 @@ static const char liblua[] =
                 using T = typename std::decay_t<decltype(arg)>::element_type;
                 if constexpr (std::is_same_v<T, ErrorFieldType>)
                     assert(false && "ErrorFieldType");
-                else if constexpr (std::is_same_v<T, BuiltinFieldType>)
+                else if constexpr (std::is_same_v<T, PrimitiveFieldType>)
                     return getCTypeName(arg->type);
+                else if constexpr (std::is_same_v<T, StringFieldType>)
+                    return "MylString";
                 else if constexpr (std::is_same_v<T, EnumFieldType>)
                     return arg->name;
                 else if constexpr (std::is_same_v<T, StructFieldType>)

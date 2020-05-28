@@ -83,13 +83,13 @@ private:
 template <>
 inline void StructBuilder::addField<glm::vec2>(const std::string& name)
 {
-    addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::vec2));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec2));
 }
 
 template <>
 inline void StructBuilder::addField<float>(const std::string& name)
 {
-    addField(name, std::make_shared<BuiltinFieldType>(BuiltinFieldType::f32));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::f32));
 }
 
 }

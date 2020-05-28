@@ -46,7 +46,7 @@ std::string ErrorFieldType::asString() const
     return "error type (" + typeName + ")";
 }
 
-const std::map<std::string, BuiltinFieldType::Type> BuiltinFieldType::typeFromString {
+const std::map<std::string, PrimitiveFieldType::Type> PrimitiveFieldType::typeFromString {
     { "invalid", invalid },
     { "bool", bool_ },
     { "u8", u8 },
@@ -61,22 +61,15 @@ const std::map<std::string, BuiltinFieldType::Type> BuiltinFieldType::typeFromSt
     { "vec2", vec2 },
     { "vec3", vec3 },
     { "vec4", vec4 },
-    { "string", string },
 };
 
-BuiltinFieldType::BuiltinFieldType(Type type)
+PrimitiveFieldType::PrimitiveFieldType(Type type)
     : FieldType(FieldType::builtin)
     , type(type)
 {
 }
 
-void BuiltinFieldType::free(void* ptr) const
-{
-    if (type == string)
-        reinterpret_cast<String*>(ptr)->~String();
-}
-
-std::string BuiltinFieldType::asString() const
+std::string PrimitiveFieldType::asString() const
 {
     switch (type) {
     case Type::invalid:
@@ -107,14 +100,12 @@ std::string BuiltinFieldType::asString() const
         return "vec3";
     case Type::vec4:
         return "vec4";
-    case Type::string:
-        return "string";
     default:
         return "unknown";
     };
 }
 
-size_t BuiltinFieldType::getSize() const
+size_t PrimitiveFieldType::getSize() const
 {
     switch (type) {
     case Type::invalid:
@@ -145,14 +136,12 @@ size_t BuiltinFieldType::getSize() const
         return sizeof(float[3]);
     case Type::vec4:
         return sizeof(float[4]);
-    case Type::string:
-        return sizeof(String);
     default:
         return 0;
     };
 }
 
-size_t BuiltinFieldType::getAlignment() const
+size_t PrimitiveFieldType::getAlignment() const
 {
     switch (type) {
     case Type::invalid:
@@ -183,11 +172,34 @@ size_t BuiltinFieldType::getAlignment() const
         return std::alignment_of_v<float[3]>;
     case Type::vec4:
         return std::alignment_of_v<float[4]>;
-    case Type::string:
-        return std::alignment_of_v<String>;
     default:
         return 0;
     };
+}
+
+StringFieldType::StringFieldType()
+    : FieldType(FieldType::string)
+{
+}
+
+void StringFieldType::free(void* ptr) const
+{
+    reinterpret_cast<String*>(ptr)->~String();
+}
+
+std::string StringFieldType::asString() const
+{
+    return "string";
+}
+
+size_t StringFieldType::getSize() const
+{
+    return sizeof(String);
+}
+
+size_t StringFieldType::getAlignment() const
+{
+    return std::alignment_of_v<String>;
 }
 
 EnumFieldType::EnumFieldType(const std::string& name)
@@ -320,7 +332,7 @@ std::string StructFieldType::asString() const
 }
 
 EnumType::EnumType(const std::vector<std::string>& valueNames)
-    : underlyingType(std::make_shared<BuiltinFieldType>(BuiltinFieldType::i32))
+    : underlyingType(std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::i32))
 {
     for (int64_t i = 0; i < valueNames.size(); ++i) {
         values.emplace_back(std::pair<std::string, int64_t>(valueNames[i], i));

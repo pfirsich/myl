@@ -54,9 +54,12 @@ std::shared_ptr<FieldType> parseType(const std::string& typeStr, const Component
         }
     }
 
-    const auto builtinIt = BuiltinFieldType::typeFromString.find(typeStr);
-    if (builtinIt != BuiltinFieldType::typeFromString.end())
-        return std::make_shared<BuiltinFieldType>(builtinIt->second);
+    if (typeStr == "string")
+        return std::make_shared<StringFieldType>();
+
+    const auto builtinIt = PrimitiveFieldType::typeFromString.find(typeStr);
+    if (builtinIt != PrimitiveFieldType::typeFromString.end())
+        return std::make_shared<PrimitiveFieldType>(builtinIt->second);
 
     const auto enumIt = cache.enums.find(typeStr);
     if (enumIt != cache.enums.end())
