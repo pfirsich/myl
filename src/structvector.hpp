@@ -3,29 +3,32 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "fieldtype.hpp"
+
 namespace myl {
 
 class Vector {
 public:
-    Vector(size_t elementSize)
-        : elementSize_(elementSize)
+    Vector(FieldType* elementType)
+        : elementType_(elementType)
     {
     }
 
     ~Vector()
     {
+        resize(0);
         std::free(data_);
     }
 
     void* getPointer(size_t index)
     {
-        return data_ + index * elementSize_;
+        return data_ + index * elementType_->getSize();
     }
 
     template <typename T>
     T& get(size_t index)
     {
-        assert(sizeof(T) == elementSize_);
+        assert(sizeof(T) == elementType_->getSize());
         assert(index < size_);
         return *reinterpret_cast<T*>(getPointer(index));
     }
@@ -36,40 +39,30 @@ public:
         return get<T>(size_ - 1 - offset);
     }
 
-    template <typename T>
-    T& pushBack(const T& val)
+    void pushBack(size_t num = 1)
     {
-        assert(sizeof(T) == elementSize_);
-        resize_(size_ + 1);
-        std::memcpy(getPointer(size_ - 1), &val, sizeof(T));
+        resize(size_ + num);
     }
 
-    void pushBack()
+    void popBack(size_t num = 1)
     {
-        resize(size_ + 1);
-    }
-
-    void popBack()
-    {
-        resize_(size_ - 1);
+        assert(size_ >= num);
+        resize(size_ - num);
     }
 
     void resize(size_t newSize)
     {
-        const auto oldSize = size_;
-        resize_(newSize);
-        if (newSize > oldSize)
-            std::memset(getPointer(oldSize), 0, (newSize - oldSize) * elementSize_);
-    }
-
-    template <typename T>
-    void resize(size_t newSize, const T& val)
-    {
-        assert(sizeof(T) == elementSize_);
-        const auto oldSize = size_;
-        resize_(newSize);
-        for (size_t i = oldSize; i < newSize; ++i)
-            std::memcpy(getPointer(i), &val, sizeof(T));
+        if (newSize > size_) {
+            const auto oldSize = size_;
+            resize_(newSize);
+            std::memset(getPointer(oldSize), 0, (newSize - oldSize) * elementType_->getSize());
+            for (size_t i = oldSize; i < size_; ++i)
+                elementType_->init(getPointer(i));
+        } else {
+            for (size_t i = newSize; i < size_; ++i)
+                elementType_->free(getPointer(i));
+            resize_(newSize);
+        }
     }
 
     template <typename T = void>
@@ -90,7 +83,7 @@ public:
 
     size_t getElementSize() const
     {
-        return elementSize_;
+        return elementType_->getSize();
     }
 
 private:
@@ -99,9 +92,9 @@ private:
         if (capacity_ < newSize) {
             const auto oldData = data_;
             const auto newCap = std::max(size_ * 2, newSize);
-            data_ = reinterpret_cast<uint8_t*>(std::malloc(newCap * elementSize_));
+            data_ = reinterpret_cast<uint8_t*>(std::malloc(newCap * elementType_->getSize()));
             capacity_ = newCap;
-            std::memcpy(data_, oldData, size_ * elementSize_);
+            std::memcpy(data_, oldData, size_ * elementType_->getSize());
             std::free(oldData);
         }
         size_ = newSize;
@@ -110,7 +103,10 @@ private:
     uint8_t* data_ = nullptr;
     size_t size_ = 0;
     size_t capacity_ = 0;
-    size_t elementSize_ = 0;
+    // Yes, this should be a std::shared_ptr<FieldType>, but I want to share this struct
+    // with e.g. LuaJIT FFI, so it's a pointer instead. I thought about using a
+    // std::shared_ptr<FieldType>*, but I think this is fine.
+    FieldType* elementType_ = nullptr;
 };
 
 }

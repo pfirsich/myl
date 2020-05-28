@@ -14,10 +14,24 @@ fields = [
 ]
 
 [[structs]]
-name = "Vector"
+name = "IntVector"
 component = true
 fields = [
     {name = "values", type = "u32[]"},
+]
+
+[[structs]]
+name = "StringVector"
+component = true
+fields = [
+    {name = "strings", type = "string[]"},
+]
+
+[[structs]]
+name = "StringVectorVector"
+component = true
+fields = [
+    {name = "values", type = "string[][]"},
 ]
 
 [[structs]]

@@ -3,11 +3,24 @@
 #include <cassert>
 #include <sstream>
 
+#include "structstring.hpp"
+#include "structvector.hpp"
+
 namespace myl {
 
 FieldType::FieldType(Type fieldType)
     : fieldType(fieldType)
 {
+}
+
+void FieldType::init(void* ptr) const
+{
+    // do nothing most of the time
+}
+
+void FieldType::free(void* ptr) const
+{
+    // do nothing most of the time
 }
 
 size_t FieldType::getSize() const
@@ -55,6 +68,12 @@ BuiltinFieldType::BuiltinFieldType(Type type)
     : FieldType(FieldType::builtin)
     , type(type)
 {
+}
+
+void BuiltinFieldType::free(void* ptr) const
+{
+    if (type == string)
+        reinterpret_cast<String*>(ptr)->~String();
 }
 
 std::string BuiltinFieldType::asString() const
@@ -199,6 +218,18 @@ ArrayFieldType::ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t si
 {
 }
 
+void ArrayFieldType::init(void* ptr) const
+{
+    for (size_t i = 0; i < size; ++i)
+        elementType->init(reinterpret_cast<uint8_t*>(ptr) + i * elementType->getSize());
+}
+
+void ArrayFieldType::free(void* ptr) const
+{
+    for (size_t i = 0; i < size; ++i)
+        elementType->free(reinterpret_cast<uint8_t*>(ptr) + i * elementType->getSize());
+}
+
 std::string ArrayFieldType::asString() const
 {
     return "array<" + elementType->asString() + ", " + std::to_string(size) + ">";
@@ -230,6 +261,16 @@ size_t VectorFieldType::getAlignment() const
     return std::alignment_of_v<Vector>;
 }
 
+void VectorFieldType::init(void* ptr) const
+{
+    new (ptr) Vector(elementType.get());
+}
+
+void VectorFieldType::free(void* ptr) const
+{
+    reinterpret_cast<Vector*>(ptr)->~Vector();
+}
+
 std::string VectorFieldType::asString() const
 {
     return "vector<" + elementType->asString() + ">";
@@ -242,6 +283,16 @@ MapFieldType::MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<F
 {
 }
 
+void MapFieldType::init(void* ptr) const
+{
+    assert(false && "Unimplemented: map init");
+}
+
+void MapFieldType::free(void* ptr) const
+{
+    assert(false && "Unimplemented: map free");
+}
+
 std::string MapFieldType::asString() const
 {
     return "map<" + keyType->asString() + ", " + valueType->asString() + ">";
@@ -251,6 +302,16 @@ StructFieldType::StructFieldType(const std::string& name)
     : FieldType(FieldType::struct_)
     , name(name)
 {
+}
+
+void StructFieldType::init(void* ptr) const
+{
+    assert(false && "Unimplemented: struct init");
+}
+
+void StructFieldType::free(void* ptr) const
+{
+    assert(false && "Unimplemented: struct free");
 }
 
 std::string StructFieldType::asString() const
@@ -299,5 +360,4 @@ std::string StructType::asString() const
     ss << "}";
     return ss.str();
 }
-
 }

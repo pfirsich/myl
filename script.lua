@@ -27,7 +27,7 @@ function myl.main()
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
 
     window.init("myl", resX, resY, false)
-    window.setVSync(true)
+    --window.setVSync(true)
     local debug = false
     myl.setSystemEnabled("_Debug", debug)
     while window.update() do

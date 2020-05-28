@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 
 #include "fieldtype.hpp"
+#include "structstring.hpp"
+#include "structvector.hpp"
 
 namespace myl {
 

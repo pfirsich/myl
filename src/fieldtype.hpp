@@ -6,9 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "structstring.hpp"
-#include "structvector.hpp"
-
 namespace myl {
 
 struct FieldType {
@@ -17,6 +14,8 @@ struct FieldType {
     FieldType(Type fieldType);
     virtual ~FieldType() = default;
 
+    virtual void init(void* ptr) const;
+    virtual void free(void* ptr) const;
     virtual std::string asString() const = 0;
     virtual size_t getSize() const;
     virtual size_t getAlignment() const;
@@ -53,6 +52,7 @@ struct BuiltinFieldType : public FieldType {
 
     BuiltinFieldType(Type type);
 
+    void free(void* ptr) const override;
     std::string asString() const override;
     size_t getSize() const override;
     size_t getAlignment() const override;
@@ -74,6 +74,8 @@ struct ArrayFieldType : public FieldType {
 
     ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t size);
 
+    void init(void* ptr) const override;
+    void free(void* ptr) const override;
     std::string asString() const override;
     size_t getSize() const override;
     size_t getAlignment() const override;
@@ -84,6 +86,8 @@ struct VectorFieldType : public FieldType {
 
     VectorFieldType(std::shared_ptr<FieldType> elementType);
 
+    void init(void* ptr) const override;
+    void free(void* ptr) const override;
     std::string asString() const override;
     size_t getSize() const override;
     size_t getAlignment() const override;
@@ -95,6 +99,8 @@ struct MapFieldType : public FieldType {
 
     MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<FieldType> valueType);
 
+    void init(void* ptr) const override;
+    void free(void* ptr) const override;
     std::string asString() const override;
 };
 
@@ -103,6 +109,8 @@ struct StructFieldType : public FieldType {
 
     StructFieldType(const std::string& name);
 
+    void init(void* ptr) const override;
+    void free(void* ptr) const override;
     std::string asString() const override;
 };
 
