@@ -3,3 +3,5 @@ untracked/
 build/
 todo.md
 imgui.ini
+compile_commands.json
+.clangd/
