@@ -7,8 +7,18 @@
 #include "../ecs.hpp"
 
 namespace myl {
-namespace Lua {
-    // No world parameter => lua has only access to default world (for now)
-    void init(sol::state& lua);
+namespace lua {
+    class State {
+    public:
+        void init(myl::World& world);
+        void init();
+
+        bool hasMain() const;
+        // returns false on error
+        bool executeMain();
+
+    private:
+        sol::state lua_;
+    };
 }
 }

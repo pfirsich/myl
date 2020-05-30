@@ -1,28 +1,33 @@
 #include "lua.hpp"
 
 #include <cassert>
+#include <filesystem>
 #include <iostream>
 
 #include "../modules/input.hpp"
 #include "../modules/timer.hpp"
 #include "../modules/window.hpp"
 
+namespace fs = std::filesystem;
+
 namespace myl {
 
-namespace Lua {
+namespace lua {
 
     // clang-format off
-static const char vec2lua[] =
-#include "vec2.lua"
+
+static const char liblua[] =
+#include "lib.lua"
 ;
 
 static const char mylstring[] =
 #include "string.lua"
 ;
 
-static const char liblua[] =
-#include "lib.lua"
+static const char vec2lua[] =
+#include "vec2.lua"
 ;
+
     // clang-format on
 
     std::string getCTypeName(PrimitiveFieldType::Type type)
@@ -216,13 +221,41 @@ static const char liblua[] =
         myl["c"] = lua.create_table();
         myl["_componentTypes"] = lua.create_table();
         for (const auto& component : getComponents()) {
-            const auto code = Lua::getAsCString(component);
-            lua["ffi"]["cdef"](code);
+            lua["ffi"]["cdef"](getAsCString(component));
             const auto& name = component.getName();
             const auto id = static_cast<size_t>(getComponentId(name));
             myl["c"][name] = id;
             myl["_componentTypes"][id] = name + "*";
         }
+    }
+
+    void State::init(myl::World& world)
+    {
+        myl::lua::init(lua_);
+        if (fs::exists("main.lua")) {
+            lua_.script_file("main.lua");
+        }
+    }
+
+    void State::init()
+    {
+        init(myl::getDefaultWorld());
+    }
+
+    bool State::hasMain() const
+    {
+        return lua_["myl"]["main"].valid();
+    }
+
+    bool State::executeMain()
+    {
+        const auto result = lua_["myl"]["main"]();
+        if (!result.valid()) {
+            const sol::error err = result;
+            std::cerr << "Error: " << err.what() << std::endl;
+            return false;
+        }
+        return true;
     }
 }
 

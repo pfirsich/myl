@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include <SFML/Graphics.hpp>
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <imgui.h>
@@ -14,6 +15,8 @@
 #include "util.hpp"
 
 using namespace myl::modules;
+
+namespace fs = std::filesystem;
 
 struct Transform {
     glm::vec2 position;
@@ -114,13 +117,28 @@ private:
     double nextCalcFps_;
 };
 
+std::optional<fs::path> getGameDirectory(const std::vector<std::string>& args)
+{
+    if (args.empty())
+        return fs::current_path();
+
+    const auto dir = args[0];
+    if (fs::exists(dir))
+        return dir;
+
+    return std::nullopt;
+}
+
 int main(int argc, char** argv)
 {
-    std::vector<std::string> args(argv + 1, argv + argc);
-    if (args.empty()) {
-        std::cerr << "Please pass a script file" << std::endl;
-        return 1;
+    const auto args = std::vector<std::string> { argv + 1, argv + argc };
+
+    const auto gameDir = getGameDirectory(args);
+    if (!gameDir) {
+        std::cerr << "Game directory does not exist." << std::endl;
+        return EXIT_FAILURE;
     }
+    fs::current_path(*gameDir);
 
     myl::loadComponentsFromFile("components.toml");
 
@@ -142,19 +160,15 @@ int main(int argc, char** argv)
     DebugSystem debugSystem;
     myl::registerSystem("_Debug", [&](float dt) { debugSystem.update(dt); });
 
-    sol::state lua;
-    myl::Lua::init(lua);
-
-    std::cout << "Executing '" << args[0] << std::endl;
-    lua.script_file(args[0]);
-
-    std::cout << "Executing main()" << std::endl;
-    const auto result = lua["myl"]["main"]();
-    if (result.valid()) {
-        std::cout << "Mainloop exited." << std::endl;
+    myl::lua::State lua;
+    lua.init();
+    if (lua.hasMain()) {
+        if (!lua.executeMain()) {
+            return EXIT_FAILURE;
+        }
     } else {
-        const sol::error err = result;
-        std::cerr << "Error: " << err.what() << std::endl;
+        std::cerr << "No main entry point found." << std::endl;
+        return EXIT_FAILURE;
     }
 
     // We would segfault upon returning without this, because the systems store update
@@ -164,5 +178,5 @@ int main(int argc, char** argv)
     // TODO: Fix this properly. Currently this is sort of a hack.
     myl::getSystems().clear();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
