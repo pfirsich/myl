@@ -27,8 +27,8 @@ namespace modules {
 
         void init(const std::string& name, size_t width, size_t height, bool fullscreen)
         {
-            getWindowPtr() = std::make_unique<sf::RenderWindow>(
-                sf::VideoMode(width, height), name, sf::Style::Default);
+            getWindowPtr() = std::make_unique<sf::RenderWindow>(sf::VideoMode(width, height), name,
+                fullscreen ? sf::Style::Fullscreen : sf::Style::Default);
             ImGui::SFML::Init(getWindow());
             setImguiStyle();
             ImGui::SFML::UpdateFontTexture();
