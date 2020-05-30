@@ -189,6 +189,8 @@ public:
             systemNames_.emplace(systems_[i].name, i);
     }
 
+    void unregisterSystem(const std::string& name);
+
     void invokeSystem(const std::string& name, float dt);
 
     std::vector<System>& getSystems();
@@ -256,12 +258,37 @@ void registerSystem(const std::string& name, Func&& func)
     getDefaultWorld().registerSystem(name, std::forward<Func>(func));
 }
 
+void unregisterSystem(const std::string& name);
+
 void invokeSystem(const std::string& name, float dt);
 
 std::vector<World::System>& getSystems();
 
 void setSystemEnabled(const std::string& name, bool enabled = true);
 void setSystemDisabled(const std::string& name);
+
+template <typename Derived>
+struct RegisteredSystem {
+    RegisteredSystem(World& world)
+        : world_(world)
+    {
+        world_.registerSystem(
+            Derived::name, [this](float dt) { static_cast<Derived*>(this)->update(dt); });
+    }
+
+    RegisteredSystem()
+        : RegisteredSystem(getDefaultWorld())
+    {
+    }
+
+    ~RegisteredSystem()
+    {
+        world_.unregisterSystem(Derived::name);
+    }
+
+private:
+    World& world_;
+};
 
 template <typename T>
 class SystemData {

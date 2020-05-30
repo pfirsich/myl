@@ -307,6 +307,13 @@ void World::registerComponent(const std::string& name, Struct&& strct)
     componentRegistered(component);
 }
 
+void World::unregisterSystem(const std::string& name)
+{
+    systems_.erase(std::remove_if(systems_.begin(), systems_.end(),
+        [&name](const System& system) { return system.name == name; }));
+    systemNames_.erase(name);
+}
+
 const Component& World::getComponent(ComponentId compId) const
 {
     return components_[static_cast<size_t>(compId)];
@@ -411,6 +418,11 @@ void* getComponentBuffer(EntityId id, ComponentId compId)
 ComponentId getComponentId(const std::string& name)
 {
     return getDefaultWorld().getComponentId(name);
+}
+
+void unregisterSystem(const std::string& name)
+{
+    getDefaultWorld().unregisterSystem(name);
 }
 
 void invokeSystem(const std::string& name, float dt)

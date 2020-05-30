@@ -7,16 +7,13 @@
 #include <imgui.h>
 
 #include "debugsystem.hpp"
-#include "ecs.hpp"
 #include "lua/lua.hpp"
 #include "modules/input.hpp"
 #include "modules/timer.hpp"
 #include "modules/window.hpp"
-#include "util.hpp"
+#include "myl.hpp"
 
 using namespace myl::modules;
-
-namespace fs = std::filesystem;
 
 struct Transform {
     glm::vec2 position;
@@ -47,7 +44,9 @@ static sf::Font& getFont()
     return font;
 }
 
-struct PlayerInputSystem {
+struct PlayerInputSystem : public myl::RegisteredSystem<PlayerInputSystem> {
+    inline static const std::string name = "PlayerInput";
+
     void update(float dt)
     {
         const auto cPlayerInputState = myl::getComponentId("PlayerInputState");
@@ -61,8 +60,10 @@ struct PlayerInputSystem {
     }
 };
 
-class RectangleRenderSystem {
+class RectangleRenderSystem : public myl::RegisteredSystem<RectangleRenderSystem> {
 public:
+    inline static const std::string name = "RectangleRender";
+
     RectangleRenderSystem()
         : shapes_(myl::getComponentId("RectangleRender"))
     {
@@ -88,8 +89,10 @@ private:
     myl::SystemData<sf::RectangleShape> shapes_;
 };
 
-class DrawFpsSystem {
+class DrawFpsSystem : public myl::RegisteredSystem<DrawFpsSystem> {
 public:
+    inline static const std::string name = "DrawFps";
+
     DrawFpsSystem()
         : frameCounter_(0)
         , nextCalcFps_(timer::getTime() + 1.0)
@@ -117,28 +120,12 @@ private:
     double nextCalcFps_;
 };
 
-std::optional<fs::path> getGameDirectory(const std::vector<std::string>& args)
-{
-    if (args.empty())
-        return fs::current_path();
-
-    const auto dir = args[0];
-    if (fs::exists(dir))
-        return dir;
-
-    return std::nullopt;
-}
-
 int main(int argc, char** argv)
 {
     const auto args = std::vector<std::string> { argv + 1, argv + argc };
 
-    const auto gameDir = getGameDirectory(args);
-    if (!gameDir) {
-        std::cerr << "Game directory does not exist." << std::endl;
+    if (!myl::initGameDirectory(args))
         return EXIT_FAILURE;
-    }
-    fs::current_path(*gameDir);
 
     myl::registerComponent("Transform",
         myl::StructBuilder()
@@ -150,16 +137,9 @@ int main(int argc, char** argv)
         "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
 
     PlayerInputSystem playerInput;
-    myl::registerSystem("PlayerInput", [&](float dt) { playerInput.update(dt); });
-
     RectangleRenderSystem rectangleRender;
-    myl::registerSystem("RectangleRender", [&](float dt) { rectangleRender.update(dt); });
-
     DrawFpsSystem drawFpsSystem;
-    myl::registerSystem("DrawFps", [&](float dt) { drawFpsSystem.update(dt); });
-
     DebugSystem debugSystem;
-    myl::registerSystem("_Debug", [&](float dt) { debugSystem.update(dt); });
 
     myl::lua::State lua;
     lua.init();
@@ -170,14 +150,6 @@ int main(int argc, char** argv)
         std::cerr << "No main entry point found." << std::endl;
         return EXIT_FAILURE;
     }
-
-    // We would segfault upon returning without this, because the systems store update
-    // functions (lambdas) that reference the lua state, while
-    // lua state itself references the world in a number of places too
-    // (Circular references - great design).
-    // TODO: Fix this properly. Currently this is sort of a hack.
-    myl::getSystems().clear();
-    myl::getDefaultWorld().componentRegistered.disconnect_all_slots();
 
     return EXIT_SUCCESS;
 }

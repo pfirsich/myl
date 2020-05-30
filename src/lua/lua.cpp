@@ -137,22 +137,31 @@ static const char vec2lua[] =
             = static_cast<bool (*)(const std::string&)>(myl::modules::input::getKeyboardReleased);
     }
 
-    void componentRegistered(sol::state& lua, const Component& component)
+    State::State(myl::World& world)
+        : world_(world)
     {
-        lua["ffi"]["cdef"](getAsCString(component));
-        const auto& name = component.getName();
-        const auto id = static_cast<size_t>(getComponentId(name));
-        lua["myl"]["c"][name] = id;
-        lua["myl"]["_componentTypes"][id] = name + "*";
+        assert(&world == &getDefaultWorld() && "Unimplemented non-default world");
     }
 
-    void init(sol::state& lua)
+    State::State()
+        : State(getDefaultWorld())
     {
-        lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string,
-            sol::lib::os, sol::lib::math, sol::lib::table, sol::lib::bit32, sol::lib::io,
-            sol::lib::ffi, sol::lib::jit, sol::lib::utf8);
+    }
 
-        auto myl = lua.create_named_table("myl");
+    State::~State()
+    {
+        for (const auto& name : registeredSystems_)
+            world_.unregisterSystem(name);
+    }
+
+    void State::init()
+    {
+        lua_.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine,
+            sol::lib::string, sol::lib::os, sol::lib::math, sol::lib::table, sol::lib::bit32,
+            sol::lib::io, sol::lib::ffi, sol::lib::jit, sol::lib::utf8);
+        lua_.set_exception_handler(&exceptionHandler);
+
+        auto myl = lua_.create_named_table("myl");
 
         myl["entityExists"].set_function(entityExists);
         myl["newEntity"].set_function(newEntity);
@@ -203,7 +212,7 @@ static const char vec2lua[] =
 
         myl["setSystemDisabled"].set_function(setSystemDisabled);
 
-        myl["registerSystem"].set_function([](const std::string& name, sol::function function) {
+        myl["registerSystem"].set_function([this](const std::string& name, sol::function function) {
             registerSystem(name, [function](float dt) {
                 const auto result = function(dt);
                 if (!result.valid()) {
@@ -212,6 +221,7 @@ static const char vec2lua[] =
                     assert(false);
                 }
             });
+            registeredSystems_.emplace_back(name);
         });
         myl["invokeSystem"].set_function(invokeSystem);
 
@@ -219,36 +229,26 @@ static const char vec2lua[] =
             static_cast<void (*)(const std::string&)>(myl::loadComponents));
 
         std::cout << "Load lib" << std::endl;
-        lua.script(liblua);
-        lua.script(mylstring);
-        lua.script(vec2lua);
+        lua_.script(liblua);
+        lua_.script(mylstring);
+        lua_.script(vec2lua);
 
         std::cout << "Init services" << std::endl;
-        myl["service"] = lua.create_table();
-        addWindowModule(lua);
-        addTimerModule(lua);
-        addInputModule(lua);
+        myl["service"] = lua_.create_table();
+        addWindowModule(lua_);
+        addTimerModule(lua_);
+        addInputModule(lua_);
 
-        getDefaultWorld().componentRegistered.connect(
-            [&lua](const Component& component) { componentRegistered(lua, component); });
+        connection_ = getDefaultWorld().componentRegistered.connect(
+            [this](const Component& component) { componentRegistered(lua_, component); });
 
-        myl["c"] = lua.create_table();
-        myl["_componentTypes"] = lua.create_table();
+        myl["c"] = lua_.create_table();
+        myl["_componentTypes"] = lua_.create_table();
         for (const auto& component : getComponents())
-            componentRegistered(lua, component);
-    }
+            componentRegistered(lua_, component);
 
-    void State::init(myl::World& world)
-    {
-        myl::lua::init(lua_);
-        if (fs::exists("main.lua")) {
+        if (fs::exists("main.lua"))
             lua_.script_file("main.lua");
-        }
-    }
-
-    void State::init()
-    {
-        init(myl::getDefaultWorld());
     }
 
     bool State::hasMain() const
@@ -261,10 +261,26 @@ static const char vec2lua[] =
         const auto result = lua_["myl"]["main"]();
         if (!result.valid()) {
             const sol::error err = result;
-            std::cerr << "Error: " << err.what() << std::endl;
+            std::cerr << "Error excecuting main: " << err.what() << std::endl;
             return false;
         }
         return true;
+    }
+
+    void State::componentRegistered(sol::state& lua, const Component& component)
+    {
+        lua["ffi"]["cdef"](getAsCString(component));
+        const auto& name = component.getName();
+        const auto id = static_cast<size_t>(getComponentId(name));
+        lua["myl"]["c"][name] = id;
+        lua["myl"]["_componentTypes"][id] = name + "*";
+    }
+
+    int State::exceptionHandler(lua_State* L, sol::optional<const std::exception&> maybeException,
+        sol::string_view description)
+    {
+        std::cerr << "Exception: " << description << std::endl;
+        return sol::stack::push(L, description);
     }
 }
 

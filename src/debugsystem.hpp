@@ -8,8 +8,10 @@
 #include "ecs.hpp"
 #include "ringbuffer.hpp"
 
-class DebugSystem {
+class DebugSystem : public myl::RegisteredSystem<DebugSystem> {
 public:
+    inline static const std::string name = "_Debug";
+
     void update(float dt);
 
 private:
