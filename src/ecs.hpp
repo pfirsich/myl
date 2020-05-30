@@ -8,6 +8,7 @@
 
 #include <boost/container/flat_map.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/signals2.hpp>
 
 #include "id.hpp"
 #include "struct.hpp"
@@ -194,6 +195,8 @@ public:
 
     void setSystemEnabled(const std::string& name, bool enabled = true);
     void setSystemDisabled(const std::string& name);
+
+    boost::signals2::signal<void(const Component&)> componentRegistered;
 
 private:
     struct Entity {

@@ -2,6 +2,8 @@ local input, timer, window = myl.service.input, myl.service.timer, myl.service.w
 
 local playerSpeed = 500
 
+myl.loadComponents("components.toml")
+
 myl.registerSystem(
     "PlayerMovement",
     function(dt)

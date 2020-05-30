@@ -47,10 +47,3 @@ component = true
 fields = [
     {name = "moveDir", type = "vec2"},
 ]
-
-[[structs]]
-name = "RectangleRender"
-component = true
-fields = [
-    {name = "size", type = "vec2"}
-]

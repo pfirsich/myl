@@ -140,13 +140,14 @@ int main(int argc, char** argv)
     }
     fs::current_path(*gameDir);
 
-    myl::loadComponentsFromFile("components.toml");
-
     myl::registerComponent("Transform",
         myl::StructBuilder()
             .addField("position", &Transform::position)
             .addField("angle", &Transform::angle)
             .build());
+
+    myl::registerComponent(
+        "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
 
     PlayerInputSystem playerInput;
     myl::registerSystem("PlayerInput", [&](float dt) { playerInput.update(dt); });
@@ -163,9 +164,8 @@ int main(int argc, char** argv)
     myl::lua::State lua;
     lua.init();
     if (lua.hasMain()) {
-        if (!lua.executeMain()) {
+        if (!lua.executeMain())
             return EXIT_FAILURE;
-        }
     } else {
         std::cerr << "No main entry point found." << std::endl;
         return EXIT_FAILURE;
@@ -177,6 +177,7 @@ int main(int argc, char** argv)
     // (Circular references - great design).
     // TODO: Fix this properly. Currently this is sort of a hack.
     myl::getSystems().clear();
+    myl::getDefaultWorld().componentRegistered.disconnect_all_slots();
 
     return EXIT_SUCCESS;
 }

@@ -137,6 +137,15 @@ static const char vec2lua[] =
             = static_cast<bool (*)(const std::string&)>(myl::modules::input::getKeyboardReleased);
     }
 
+    void componentRegistered(sol::state& lua, const Component& component)
+    {
+        lua["ffi"]["cdef"](getAsCString(component));
+        const auto& name = component.getName();
+        const auto id = static_cast<size_t>(getComponentId(name));
+        lua["myl"]["c"][name] = id;
+        lua["myl"]["_componentTypes"][id] = name + "*";
+    }
+
     void init(sol::state& lua)
     {
         lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string,
@@ -206,6 +215,9 @@ static const char vec2lua[] =
         });
         myl["invokeSystem"].set_function(invokeSystem);
 
+        myl["loadComponents"].set_function(
+            static_cast<void (*)(const std::string&)>(myl::loadComponents));
+
         std::cout << "Load lib" << std::endl;
         lua.script(liblua);
         lua.script(mylstring);
@@ -217,16 +229,13 @@ static const char vec2lua[] =
         addTimerModule(lua);
         addInputModule(lua);
 
-        std::cout << "Init components" << std::endl;
+        getDefaultWorld().componentRegistered.connect(
+            [&lua](const Component& component) { componentRegistered(lua, component); });
+
         myl["c"] = lua.create_table();
         myl["_componentTypes"] = lua.create_table();
-        for (const auto& component : getComponents()) {
-            lua["ffi"]["cdef"](getAsCString(component));
-            const auto& name = component.getName();
-            const auto id = static_cast<size_t>(getComponentId(name));
-            myl["c"][name] = id;
-            myl["_componentTypes"][id] = name + "*";
-        }
+        for (const auto& component : getComponents())
+            componentRegistered(lua, component);
     }
 
     void State::init(myl::World& world)

@@ -304,6 +304,7 @@ void World::registerComponent(const std::string& name, Struct&& strct)
     // TODO: Page size has to be configurable at some point.
     componentPools_.emplace_back(component.getStruct().getSize());
     componentNames_.emplace(component.getName(), component.getId());
+    componentRegistered(component);
 }
 
 const Component& World::getComponent(ComponentId compId) const

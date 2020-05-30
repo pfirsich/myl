@@ -99,7 +99,7 @@ bool hasErrorType(StructType& structType)
     return false;
 }
 
-ComponentFileData loadComponentFromFile(std::string_view path)
+ComponentFileData loadComponents(std::string_view path)
 {
     // If the file is malformed, this will do weird shit. I don't care, go fuck yourself.
     ComponentFileData data;
@@ -150,9 +150,9 @@ ComponentFileData loadComponentFromFile(std::string_view path)
     return data;
 }
 
-void loadComponentsFromFile(World& world, std::string_view path)
+void loadComponents(World& world, std::string_view path)
 {
-    const auto componentData = loadComponentFromFile(path);
+    const auto componentData = loadComponents(path);
     for (const auto& [name, component] : componentData.structs) {
         if (!component.isComponent)
             continue;
@@ -165,9 +165,9 @@ void loadComponentsFromFile(World& world, std::string_view path)
     }
 }
 
-void loadComponentsFromFile(std::string_view path)
+void loadComponents(const std::string& path)
 {
-    loadComponentsFromFile(getDefaultWorld(), path);
+    loadComponents(getDefaultWorld(), path);
 }
 
 }
