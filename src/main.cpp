@@ -68,76 +68,73 @@ struct PlayerInputSystem : public myl::RegisteredSystem<PlayerInputSystem> {
     }
 };
 
-class RectangleRenderSystem : public myl::RegisteredSystem<RectangleRenderSystem> {
+template <typename Derived, typename Shape>
+class ShapeRenderSystem {
 public:
+    ShapeRenderSystem(const std::string& componentName)
+        : componentId_(myl::getComponentId(componentName))
+        , shapes_(componentId_)
+    {
+    }
+
+    void update(float /*dt*/)
+    {
+        static const auto cTransform = myl::getComponentId("Transform");
+        static const auto cColor = myl::getComponentId("Color");
+        for (auto entity : myl::getEntities(cTransform + componentId_)) {
+            auto& shape = shapes_.template get<true>(entity);
+            const auto trafo = myl::getComponent<Transform>(entity, cTransform);
+            shape.setPosition(trafo->position.x, trafo->position.y);
+            shape.setRotation(trafo->angle / M_PI * 180.0f);
+            static_cast<Derived*>(this)->updateShape(entity, shape);
+            if (myl::hasComponent(entity, cColor)) {
+                auto& color = myl::getComponent<Color>(entity, cColor)->color;
+                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
+            } else {
+                shape.setFillColor(sf::Color(255, 255, 255, 255));
+            }
+            window::getWindow().draw(shape);
+        }
+        shapes_.remove();
+    }
+
+private:
+    myl::ComponentId componentId_;
+    myl::SystemData<Shape> shapes_;
+};
+
+struct RectangleRenderSystem : public myl::RegisteredSystem<RectangleRenderSystem>,
+                               public ShapeRenderSystem<RectangleRenderSystem, sf::RectangleShape> {
     inline static const std::string name = "RectangleRender";
 
     RectangleRenderSystem()
-        : shapes_(myl::getComponentId("RectangleRender"))
+        : ShapeRenderSystem("RectangleRender")
     {
     }
 
-    void update(float /*dt*/)
+    void updateShape(myl::EntityId entity, sf::RectangleShape& shape) const
     {
-        const auto cTransform = myl::getComponentId("Transform");
-        const auto cRectangleRender = myl::getComponentId("RectangleRender");
-        const auto cColor = myl::getComponentId("Color");
-        for (auto entity : myl::getEntities(cTransform + cRectangleRender)) {
-            auto& shape = shapes_.get<true>(entity);
-            auto trafo = myl::getComponent<Transform>(entity, cTransform);
-            auto rectangleRender = myl::getComponent<RectangleRender>(entity, cRectangleRender);
-            shape.setPosition(trafo->position.x, trafo->position.y);
-            shape.setRotation(trafo->angle / M_PI * 180.0f);
-            shape.setSize(sf::Vector2f(rectangleRender->size.x, rectangleRender->size.y));
-            if (myl::hasComponent(entity, cColor)) {
-                auto& color = myl::getComponent<Color>(entity, cColor)->color;
-                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
-            } else {
-                shape.setFillColor(sf::Color(255, 255, 255, 255));
-            }
-            window::getWindow().draw(shape);
-        }
-        shapes_.remove();
+        static const auto cRectangleRender = myl::getComponentId("RectangleRender");
+        const auto rectangleRender = myl::getComponent<RectangleRender>(entity, cRectangleRender);
+        shape.setSize(sf::Vector2f(rectangleRender->size.x, rectangleRender->size.y));
     }
-
-private:
-    myl::SystemData<sf::RectangleShape> shapes_;
 };
 
-class CircleRenderSystem : public myl::RegisteredSystem<CircleRenderSystem> {
-public:
+struct CircleRenderSystem : public myl::RegisteredSystem<CircleRenderSystem>,
+                            public ShapeRenderSystem<CircleRenderSystem, sf::CircleShape> {
     inline static const std::string name = "CircleRender";
 
     CircleRenderSystem()
-        : shapes_(myl::getComponentId("CircleRender"))
+        : ShapeRenderSystem("CircleRender")
     {
     }
 
-    void update(float /*dt*/)
+    void updateShape(myl::EntityId entity, sf::CircleShape& shape) const
     {
-        const auto cTransform = myl::getComponentId("Transform");
-        const auto cCircleRender = myl::getComponentId("CircleRender");
-        const auto cColor = myl::getComponentId("Color");
-        for (auto entity : myl::getEntities(cTransform + cCircleRender)) {
-            auto& shape = shapes_.get<true>(entity);
-            auto trafo = myl::getComponent<Transform>(entity, cTransform);
-            auto circleRender = myl::getComponent<CircleRender>(entity, cCircleRender);
-            shape.setPosition(trafo->position.x, trafo->position.y);
-            shape.setRotation(trafo->angle / M_PI * 180.0f);
-            shape.setRadius(circleRender->radius);
-            if (myl::hasComponent(entity, cColor)) {
-                auto& color = myl::getComponent<Color>(entity, cColor)->color;
-                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
-            } else {
-                shape.setFillColor(sf::Color(255, 255, 255, 255));
-            }
-            window::getWindow().draw(shape);
-        }
-        shapes_.remove();
+        static const auto cCircleRender = myl::getComponentId("CircleRender");
+        const auto circleRender = myl::getComponent<CircleRender>(entity, cCircleRender);
+        shape.setRadius(circleRender->radius);
     }
-
-private:
-    myl::SystemData<sf::CircleShape> shapes_;
 };
 
 class DrawFpsSystem : public myl::RegisteredSystem<DrawFpsSystem> {
