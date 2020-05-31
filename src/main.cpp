@@ -7,6 +7,7 @@
 #include <imgui.h>
 
 #include "debugsystem.hpp"
+#include "defaultfont.hpp"
 #include "lua/lua.hpp"
 #include "modules/input.hpp"
 #include "modules/timer.hpp"
@@ -48,7 +49,11 @@ float floatKey(input::Key key)
 static sf::Font& getFont()
 {
     static sf::Font font;
-    assert(font.loadFromFile("RobotoMono-Regular.ttf"));
+    static bool loaded = false;
+    if (!loaded) {
+        assert(font.loadFromMemory(myl::defaultFont, myl::defaultFontLen));
+        loaded = true;
+    }
     return font;
 }
 

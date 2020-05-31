@@ -13,6 +13,7 @@ set(SRC
   color.cpp
   componentfile.cpp
   debugsystem.cpp
+  defaultfont.cpp
   ecs.cpp
   fieldtype.cpp
   lua/lua.cpp
