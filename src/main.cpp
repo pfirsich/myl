@@ -177,8 +177,10 @@ int main(int argc, char** argv)
 {
     const auto args = std::vector<std::string> { argv + 1, argv + argc };
 
-    if (!myl::initGameDirectory(args))
+    if (!myl::initGameDirectory(args)) {
+        std::cerr << "Game directory not found." << std::endl;
         return EXIT_FAILURE;
+    }
 
     myl::registerComponent("Transform",
         myl::StructBuilder()
