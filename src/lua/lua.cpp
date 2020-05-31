@@ -28,6 +28,18 @@ static const char vec2lua[] =
 #include "vec2.lua"
 ;
 
+static const char vec3lua[] =
+#include "vec3.lua"
+;
+
+static const char vec4lua[] =
+#include "vec4.lua"
+;
+
+static const char colorlua[] =
+#include "color.lua"
+;
+
     // clang-format on
 
     std::string getCTypeName(PrimitiveFieldType::Type type)
@@ -234,6 +246,9 @@ static const char vec2lua[] =
         lua_.script(liblua);
         lua_.script(mylstring);
         lua_.script(vec2lua);
+        lua_.script(vec3lua);
+        lua_.script(vec4lua);
+        lua_.script(colorlua);
 
         std::cout << "Init services" << std::endl;
         myl["service"] = lua_.create_table();

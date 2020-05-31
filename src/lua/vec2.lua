@@ -5,6 +5,8 @@ R"luastring"--(
 local ffi = require("ffi")
 
 local sqrt = math.sqrt
+local atan2 = math.atan2
+local acos = math.acos
 local cos, sin = math.cos, math.sin
 local min, max = math.min, math.max
 
@@ -108,7 +110,7 @@ function vec2.mul(a, b)
     return vec2_type(a.x * b.x, a.y * b.y)
 end
 
-function vec2.mul(a, b)
+function vec2.div(a, b)
     return vec2_type(a.x / b.x, a.y / b.y)
 end
 
@@ -159,7 +161,7 @@ function vec2_mt.__call(_, x, y)
 end
 
 function vec2_mt.__unm(a)
-	return new(-a.x, -a.y)
+    return vec2_type(-a.x, -a.y)
 end
 
 function vec2_mt.__eq(a, b)
