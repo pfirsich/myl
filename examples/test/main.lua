@@ -19,15 +19,16 @@ function myl.main()
 
     local entity = myl.newEntity()
     myl.addComponent(entity, myl.c.Name).value:set("Player")
-    myl.addComponent(entity, myl.c.Color).value = myl.color(1, 0, 0, 1)
+    myl.addComponent(entity, myl.c.Color).value = myl.color.new("#af19bf")
     myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX / 2, resY / 2)
     myl.addComponent(entity, myl.c.PlayerInputState)
-    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
+    myl.addComponent(entity, myl.c.CircleRender).radius = 40
 
     entity = myl.newEntity()
+    myl.addComponent(entity, myl.c.Name).value:set("Someting")
     myl.addComponent(entity, myl.c.Transform).position = myl.vec2(200, 200)
-    myl.addComponent(entity, myl.c.PlayerInputState)
-    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(50, 50)
+    myl.addComponent(entity, myl.c.Color).value = myl.color.new("#75e5eb")
+    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(120, 120)
 
     window.init("myl", resX, resY, false)
     window.setVSync(true)

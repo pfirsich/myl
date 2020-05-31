@@ -18,7 +18,7 @@ local vec4_type = ffi.typeof("vec4")
 local vec4 = {}
 
 function vec4.new(x, y, z, w)
-    return vec4_type(x, y, z, w)
+    return vec4_type(x, y or x, z or x, w or x)
 end
 
 -- unary operations
@@ -134,10 +134,6 @@ local vec4_mt = {
     __index = vec4,
     __tostring = vec4.toString,
 }
-
-function vec4_mt.__call(_, x, y, z, w)
-    return vec4_type(x, y, z, w)
-end
 
 function vec4_mt.__unm(a)
     return vec4_type(-a.x, -a.y, -a.z, -a.w)

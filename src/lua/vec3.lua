@@ -18,7 +18,7 @@ local vec3_type = ffi.typeof("vec3")
 local vec3 = {}
 
 function vec3.new(x, y, z)
-    return vec3_type(x, y, z)
+    return vec3_type(x, y or x, z or x)
 end
 
 -- unary operations
@@ -140,10 +140,6 @@ local vec3_mt = {
     __index = vec3,
     __tostring = vec3.toString,
 }
-
-function vec3_mt.__call(_, x, y, z)
-    return vec3_type(x, y, z)
-end
 
 function vec3_mt.__unm(a)
     return vec3_type(-a.x, -a.y, -a.z)

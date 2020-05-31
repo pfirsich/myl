@@ -20,7 +20,7 @@ local vec2_type = ffi.typeof("vec2")
 local vec2 = {}
 
 function vec2.new(x, y)
-    return vec2_type(x, y)
+    return vec2_type(x, y or x)
 end
 
 -- unary operations
@@ -155,10 +155,6 @@ local vec2_mt = {
     __index = vec2,
     __tostring = vec2.toString,
 }
-
-function vec2_mt.__call(_, x, y)
-    return vec2_type(x, y)
-end
 
 function vec2_mt.__unm(a)
     return vec2_type(-a.x, -a.y)
