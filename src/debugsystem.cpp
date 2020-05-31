@@ -11,7 +11,7 @@
 
 static const size_t systemInspectorHeight = 400;
 
-void DebugSystem::update(float dt)
+void DebugSystem::update(float /*dt*/)
 {
     auto& systems = myl::getSystems();
 

@@ -13,12 +13,12 @@ FieldType::FieldType(Type fieldType)
 {
 }
 
-void FieldType::init(void* ptr) const
+void FieldType::init(void* /*ptr*/) const
 {
     // do nothing most of the time
 }
 
-void FieldType::free(void* ptr) const
+void FieldType::free(void* /*ptr*/) const
 {
     // do nothing most of the time
 }
@@ -295,12 +295,12 @@ MapFieldType::MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<F
 {
 }
 
-void MapFieldType::init(void* ptr) const
+void MapFieldType::init(void* /*ptr*/) const
 {
     assert(false && "Unimplemented: map init");
 }
 
-void MapFieldType::free(void* ptr) const
+void MapFieldType::free(void* /*ptr*/) const
 {
     assert(false && "Unimplemented: map free");
 }
@@ -316,12 +316,12 @@ StructFieldType::StructFieldType(const std::string& name)
 {
 }
 
-void StructFieldType::init(void* ptr) const
+void StructFieldType::init(void* /*ptr*/) const
 {
     assert(false && "Unimplemented: struct init");
 }
 
-void StructFieldType::free(void* ptr) const
+void StructFieldType::free(void* /*ptr*/) const
 {
     assert(false && "Unimplemented: struct free");
 }
@@ -334,8 +334,8 @@ std::string StructFieldType::asString() const
 EnumType::EnumType(const std::vector<std::string>& valueNames)
     : underlyingType(std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::i32))
 {
-    for (int64_t i = 0; i < valueNames.size(); ++i) {
-        values.emplace_back(std::pair<std::string, int64_t>(valueNames[i], i));
+    for (size_t i = 0; i < valueNames.size(); ++i) {
+        values.emplace_back(valueNames[i], static_cast<int64_t>(i));
     }
 }
 
@@ -345,7 +345,7 @@ std::string EnumType::asString() const
     ss << "{";
     for (size_t i = 0; i < values.size(); ++i) {
         ss << values[i].first;
-        if (values[i].second != i)
+        if (values[i].second != static_cast<int64_t>(i))
             ss << "(" << values[i].second << ")";
         if (i < values.size() - 1)
             ss << ", ";

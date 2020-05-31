@@ -175,7 +175,7 @@ static const char vec2lua[] =
 
             size_t index = 0;
             return sol::as_function(
-                [entities, index](sol::this_state L) mutable -> std::optional<EntityId> {
+                [entities, index](sol::this_state /*L*/) mutable -> std::optional<EntityId> {
                     if (index < entities.size())
                         return entities[index++];
                     return std::nullopt;
@@ -276,8 +276,8 @@ static const char vec2lua[] =
         lua["myl"]["_componentTypes"][id] = name + "*";
     }
 
-    int State::exceptionHandler(lua_State* L, sol::optional<const std::exception&> maybeException,
-        sol::string_view description)
+    int State::exceptionHandler(lua_State* L,
+        sol::optional<const std::exception&> /*maybeException*/, sol::string_view description)
     {
         std::cerr << "Exception: " << description << std::endl;
         return sol::stack::push(L, description);

@@ -51,7 +51,7 @@ static sf::Font& getFont()
 struct PlayerInputSystem : public myl::RegisteredSystem<PlayerInputSystem> {
     inline static const std::string name = "PlayerInput";
 
-    void update(float dt)
+    void update(float /*dt*/)
     {
         const auto cPlayerInputState = myl::getComponentId("PlayerInputState");
         for (auto entity : myl::getEntities(cPlayerInputState)) {
@@ -73,7 +73,7 @@ public:
     {
     }
 
-    void update(float dt)
+    void update(float /*dt*/)
     {
         const auto cTransform = myl::getComponentId("Transform");
         const auto cRectangleRender = myl::getComponentId("RectangleRender");
@@ -102,7 +102,7 @@ public:
     {
     }
 
-    void update(float dt)
+    void update(float /*dt*/)
     {
         const auto cTransform = myl::getComponentId("Transform");
         const auto cCircleRender = myl::getComponentId("CircleRender");
@@ -135,7 +135,7 @@ public:
         text_.setFillColor(sf::Color::White);
     }
 
-    void update(float dt)
+    void update(float /*dt*/)
     {
         const auto now = timer::getTime();
         frameCounter_++;

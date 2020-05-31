@@ -30,12 +30,12 @@ public:
 
     constexpr bool operator==(Id other)
     {
-        return id_ == static_cast<Underlying>(id_);
+        return id_ == static_cast<Underlying>(other.id_);
     }
 
     constexpr bool operator!=(Id other)
     {
-        return id_ == static_cast<Underlying>(id_);
+        return id_ == static_cast<Underlying>(other.id_);
     }
 
     std::string toString() const

@@ -59,7 +59,7 @@ public:
     void addField(const std::string& name, std::shared_ptr<FieldType> type);
 
     template <typename T>
-    void addField(const std::string& name)
+    void addField(const std::string& /*name*/)
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>, "Please only use value types");
         static_assert(std::is_same_v<T, void> && !std::is_same_v<T, void>,
@@ -67,7 +67,7 @@ public:
     }
 
     template <typename T, typename M>
-    StructBuilder addField(const std::string& name, M T::*field)
+    StructBuilder addField(const std::string& name, M T::* /*field*/)
     {
         addField<M>(name);
         return *this;

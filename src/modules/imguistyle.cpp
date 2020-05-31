@@ -4,7 +4,7 @@ namespace myl {
 namespace modules {
     namespace window {
         namespace {
-            void setDefaultFont(const char* name, float size)
+            [[maybe_unused]] void setDefaultFont(const char* name, float size)
             {
                 ImGuiIO& io = ImGui::GetIO();
                 auto font = io.Fonts->AddFontFromFileTTF(name, size);
