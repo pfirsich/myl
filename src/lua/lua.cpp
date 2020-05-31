@@ -61,6 +61,8 @@ static const char vec2lua[] =
             return "vec3";
         case PrimitiveFieldType::Type::vec4:
             return "vec4";
+        case PrimitiveFieldType::Type::color:
+            return "color";
         default:
             assert(false && "Unknown BuiltinFieldType");
         };

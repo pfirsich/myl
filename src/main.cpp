@@ -36,6 +36,10 @@ struct CircleRender {
     float radius;
 };
 
+struct Color {
+    myl::Color color;
+};
+
 float floatKey(input::Key key)
 {
     return input::getKeyboardDown(key) ? 1.0f : 0.0f;
@@ -77,6 +81,7 @@ public:
     {
         const auto cTransform = myl::getComponentId("Transform");
         const auto cRectangleRender = myl::getComponentId("RectangleRender");
+        const auto cColor = myl::getComponentId("Color");
         for (auto entity : myl::getEntities(cTransform + cRectangleRender)) {
             auto& shape = shapes_.get<true>(entity);
             auto trafo = myl::getComponent<Transform>(entity, cTransform);
@@ -84,6 +89,12 @@ public:
             shape.setPosition(trafo->position.x, trafo->position.y);
             shape.setRotation(trafo->angle / M_PI * 180.0f);
             shape.setSize(sf::Vector2f(rectangleRender->size.x, rectangleRender->size.y));
+            if (myl::hasComponent(entity, cColor)) {
+                auto& color = myl::getComponent<Color>(entity, cColor)->color;
+                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
+            } else {
+                shape.setFillColor(sf::Color(255, 255, 255, 255));
+            }
             window::getWindow().draw(shape);
         }
         shapes_.remove();
@@ -106,6 +117,7 @@ public:
     {
         const auto cTransform = myl::getComponentId("Transform");
         const auto cCircleRender = myl::getComponentId("CircleRender");
+        const auto cColor = myl::getComponentId("Color");
         for (auto entity : myl::getEntities(cTransform + cCircleRender)) {
             auto& shape = shapes_.get<true>(entity);
             auto trafo = myl::getComponent<Transform>(entity, cTransform);
@@ -113,6 +125,12 @@ public:
             shape.setPosition(trafo->position.x, trafo->position.y);
             shape.setRotation(trafo->angle / M_PI * 180.0f);
             shape.setRadius(circleRender->radius);
+            if (myl::hasComponent(entity, cColor)) {
+                auto& color = myl::getComponent<Color>(entity, cColor)->color;
+                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
+            } else {
+                shape.setFillColor(sf::Color(255, 255, 255, 255));
+            }
             window::getWindow().draw(shape);
         }
         shapes_.remove();
@@ -168,9 +186,9 @@ int main(int argc, char** argv)
 
     myl::registerComponent(
         "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
-
     myl::registerComponent(
         "CircleRender", myl::StructBuilder().addField("radius", &CircleRender::radius).build());
+    myl::registerComponent("Color", myl::StructBuilder().addField("color", &Color::color).build());
 
     PlayerInputSystem playerInput;
     RectangleRenderSystem rectangleRender;

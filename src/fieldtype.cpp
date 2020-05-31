@@ -3,6 +3,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "color.hpp"
 #include "structstring.hpp"
 #include "structvector.hpp"
 
@@ -61,6 +62,7 @@ const std::map<std::string, PrimitiveFieldType::Type> PrimitiveFieldType::typeFr
     { "vec2", vec2 },
     { "vec3", vec3 },
     { "vec4", vec4 },
+    { "color", color },
 };
 
 PrimitiveFieldType::PrimitiveFieldType(Type type)
@@ -100,6 +102,8 @@ std::string PrimitiveFieldType::asString() const
         return "vec3";
     case Type::vec4:
         return "vec4";
+    case Type::color:
+        return "color";
     default:
         return "unknown";
     };
@@ -136,6 +140,8 @@ size_t PrimitiveFieldType::getSize() const
         return sizeof(float[3]);
     case Type::vec4:
         return sizeof(float[4]);
+    case Type::color:
+        return sizeof(Color);
     default:
         return 0;
     };
@@ -172,6 +178,8 @@ size_t PrimitiveFieldType::getAlignment() const
         return std::alignment_of_v<float[3]>;
     case Type::vec4:
         return std::alignment_of_v<float[4]>;
+    case Type::color:
+        return std::alignment_of_v<Color>;
     default:
         return 0;
     };

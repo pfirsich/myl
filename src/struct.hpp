@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 
+#include "color.hpp"
 #include "fieldtype.hpp"
 #include "structstring.hpp"
 #include "structvector.hpp"
@@ -84,6 +85,24 @@ template <>
 inline void StructBuilder::addField<glm::vec2>(const std::string& name)
 {
     addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec2));
+}
+
+template <>
+inline void StructBuilder::addField<glm::vec3>(const std::string& name)
+{
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec3));
+}
+
+template <>
+inline void StructBuilder::addField<glm::vec4>(const std::string& name)
+{
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec4));
+}
+
+template <>
+inline void StructBuilder::addField<Color>(const std::string& name)
+{
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::color));
 }
 
 template <>

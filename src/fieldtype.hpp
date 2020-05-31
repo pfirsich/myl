@@ -45,6 +45,7 @@ struct PrimitiveFieldType : public FieldType {
         vec2,
         vec3,
         vec4,
+        color,
     } type;
 
     static const std::map<std::string, Type> typeFromString;

@@ -315,6 +315,17 @@ void DebugSystem::showFieldElement(
         case myl::PrimitiveFieldType::vec2:
             ImGui::InputFloat2(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
+        case myl::PrimitiveFieldType::vec3:
+            ImGui::InputFloat3(name.c_str(), reinterpret_cast<float*>(ptr));
+            break;
+        case myl::PrimitiveFieldType::vec4:
+            ImGui::InputFloat4(name.c_str(), reinterpret_cast<float*>(ptr));
+            break;
+        case myl::PrimitiveFieldType::color:
+            ImGui::ColorEdit4(name.c_str(), reinterpret_cast<float*>(ptr),
+                ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf
+                    | ImGuiColorEditFlags_Float);
+            break;
         default:
             ImGui::Text("Unimplemented Builtin Type");
             break;
