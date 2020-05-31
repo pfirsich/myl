@@ -14,7 +14,7 @@ local color_type = ffi.typeof("color")
 local color = {}
 
 function color.new(r, g, b, a)
-    return color_type(r, g, b, a)
+    return color_type(r, g, b, a or 1.0)
 end
 
 -- unary operations

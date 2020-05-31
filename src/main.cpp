@@ -37,7 +37,7 @@ struct CircleRender {
 };
 
 struct Color {
-    myl::Color color;
+    myl::Color value;
 };
 
 float floatKey(input::Key key)
@@ -88,7 +88,7 @@ public:
             shape.setRotation(trafo->angle / M_PI * 180.0f);
             static_cast<Derived*>(this)->updateShape(entity, shape);
             if (myl::hasComponent(entity, cColor)) {
-                auto& color = myl::getComponent<Color>(entity, cColor)->color;
+                auto& color = myl::getComponent<Color>(entity, cColor)->value;
                 shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
             } else {
                 shape.setFillColor(sf::Color(255, 255, 255, 255));
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
         "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
     myl::registerComponent(
         "CircleRender", myl::StructBuilder().addField("radius", &CircleRender::radius).build());
-    myl::registerComponent("Color", myl::StructBuilder().addField("color", &Color::color).build());
+    myl::registerComponent("Color", myl::StructBuilder().addField("value", &Color::value).build());
 
     PlayerInputSystem playerInput;
     RectangleRenderSystem rectangleRender;
