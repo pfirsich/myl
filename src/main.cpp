@@ -32,6 +32,10 @@ struct RectangleRender {
     glm::vec2 size;
 };
 
+struct CircleRender {
+    float radius;
+};
+
 float floatKey(input::Key key)
 {
     return input::getKeyboardDown(key) ? 1.0f : 0.0f;
@@ -89,6 +93,35 @@ private:
     myl::SystemData<sf::RectangleShape> shapes_;
 };
 
+class CircleRenderSystem : public myl::RegisteredSystem<CircleRenderSystem> {
+public:
+    inline static const std::string name = "CircleRender";
+
+    CircleRenderSystem()
+        : shapes_(myl::getComponentId("CircleRender"))
+    {
+    }
+
+    void update(float dt)
+    {
+        const auto cTransform = myl::getComponentId("Transform");
+        const auto cCircleRender = myl::getComponentId("CircleRender");
+        for (auto entity : myl::getEntities(cTransform + cCircleRender)) {
+            auto& shape = shapes_.get<true>(entity);
+            auto trafo = myl::getComponent<Transform>(entity, cTransform);
+            auto circleRender = myl::getComponent<CircleRender>(entity, cCircleRender);
+            shape.setPosition(trafo->position.x, trafo->position.y);
+            shape.setRotation(trafo->angle / M_PI * 180.0f);
+            shape.setRadius(circleRender->radius);
+            window::getWindow().draw(shape);
+        }
+        shapes_.remove();
+    }
+
+private:
+    myl::SystemData<sf::CircleShape> shapes_;
+};
+
 class DrawFpsSystem : public myl::RegisteredSystem<DrawFpsSystem> {
 public:
     inline static const std::string name = "DrawFps";
@@ -136,8 +169,12 @@ int main(int argc, char** argv)
     myl::registerComponent(
         "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
 
+    myl::registerComponent(
+        "CircleRender", myl::StructBuilder().addField("radius", &CircleRender::radius).build());
+
     PlayerInputSystem playerInput;
     RectangleRenderSystem rectangleRender;
+    CircleRenderSystem circleRender;
     DrawFpsSystem drawFpsSystem;
     DebugSystem debugSystem;
 

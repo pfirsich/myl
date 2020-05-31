@@ -45,6 +45,7 @@ function myl.main()
 
         window.clear()
         myl.invokeSystem("RectangleRender", dt)
+        myl.invokeSystem("CircleRender", dt)
         myl.invokeSystem("DrawFps", dt)
         myl.invokeSystem("_Debug", dt)
         window.present()
