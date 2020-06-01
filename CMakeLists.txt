@@ -27,6 +27,7 @@ set(SRC
   modules/imguistyle.cpp
   modules/input.cpp
   modules/timer.cpp
+  modules/tweak.cpp
   modules/window.cpp
   myl.cpp
   struct.cpp
@@ -55,6 +56,8 @@ set(BUILD_SHARED_LIBS ON)
 add_subdirectory(deps/imgui-sfml)
 set(BUILD_SHARED_LIBS OFF)
 
+add_subdirectory(deps/fmt EXCLUDE_FROM_ALL)
+
 include_directories(deps/tomlplusplus/include)
 
 include(luajit)
@@ -64,6 +67,7 @@ target_link_libraries(myl spdlog::spdlog)
 target_link_libraries(myl libluajit)
 target_link_libraries(myl sfml-graphics sfml-window sfml-system)
 target_link_libraries(myl ImGui-SFML::ImGui-SFML)
+target_link_libraries(myl fmt::fmt)
 
 if(MSVC)
   target_compile_options(myl PRIVATE /W4 /WX)

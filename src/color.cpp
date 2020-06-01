@@ -44,4 +44,14 @@ Color::operator uint32_t() const
         | static_cast<uint32_t>(b * 255.f) << 8 | static_cast<uint32_t>(a * 255.f);
 }
 
+bool Color::operator==(const Color& other) const
+{
+    return r == other.r && g == other.g && b == other.b && a == other.a;
+}
+
+bool Color::operator!=(const Color& other) const
+{
+    return !(*this == other);
+}
+
 }

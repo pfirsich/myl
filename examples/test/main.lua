@@ -1,6 +1,6 @@
 local input, timer, window = myl.service.input, myl.service.timer, myl.service.window
-
-local playerSpeed = 500
+local tweak = myl.service.tweak
+local Tf = tweak.getFloat
 
 myl.loadComponents("components.toml")
 
@@ -9,7 +9,7 @@ myl.registerSystem(
     function(dt)
         for entity in myl.foreachEntity(myl.c.Transform, myl.c.PlayerInputState) do
             local trafo, pinput = myl.getComponents(entity, myl.c.Transform, myl.c.PlayerInputState)
-            trafo.position = trafo.position + pinput.moveDir * playerSpeed * dt
+            trafo.position = trafo.position + pinput.moveDir * Tf("playerSpeed", 500) * dt
         end
     end
 )
@@ -31,7 +31,7 @@ function myl.main()
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(120, 120)
 
     window.init("myl", resX, resY, false)
-    window.setVSync(true)
+    --window.setVSync(true)
     local debug = false
     myl.setSystemEnabled("_Debug", debug)
     while window.update() do
@@ -56,4 +56,6 @@ function myl.main()
             break
         end
     end
+
+    tweak.save()
 end

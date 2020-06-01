@@ -23,6 +23,8 @@ private:
 
     void showEntityInspector();
 
+    void showTweakInspector();
+
     static std::string getComponentCaption(const myl::Component& component, const void* ptr);
     static void showFieldElement(
         const std::string& name, std::shared_ptr<myl::FieldType> fieldType, void* ptr);
@@ -30,6 +32,7 @@ private:
 
     bool showEntityInspector_ = false;
     bool showSystemInspector_ = false;
+    bool showTweakInspector_ = false;
     bool showImGuiDemoWindow_ = false;
     bool showImPlotDemoWindow_ = false;
     std::vector<size_t> disableNextFrame_;

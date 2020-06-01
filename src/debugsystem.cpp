@@ -7,6 +7,8 @@
 #include <implot.h>
 #include <misc/cpp/imgui_stdlib.h>
 
+#include "glmformat.hpp"
+#include "modules/tweak.hpp"
 #include "util.hpp"
 
 static const size_t systemInspectorHeight = 400;
@@ -40,6 +42,9 @@ void DebugSystem::update(float /*dt*/)
 
     if (showSystemInspector_)
         showSystemInspector();
+
+    if (showTweakInspector_)
+        showTweakInspector();
 
     if (showImGuiDemoWindow_)
         ImGui::ShowDemoWindow(nullptr);
@@ -76,6 +81,9 @@ void DebugSystem::showMiniMenu()
 
     if (ImGui::Button("System Inspector"))
         showSystemInspector_ = !showSystemInspector_;
+
+    if (ImGui::Button("Tweak Inspector"))
+        showTweakInspector_ = !showTweakInspector_;
 
     if (ImGui::Button("System ImGui Demo Window"))
         showImGuiDemoWindow_ = !showImGuiDemoWindow_;
@@ -262,6 +270,87 @@ void DebugSystem::showEntityInspector()
             selected = -1;
         }
         ImGui::EndChild();
+    }
+
+    ImGui::End();
+}
+
+void DebugSystem::showTweakInspector()
+{
+    using namespace myl::modules::tweak;
+
+    const ImGuiIO& io = ImGui::GetIO();
+    const size_t width = 500;
+    ImGui::SetNextWindowSize(
+        ImVec2(width, io.DisplaySize.y - systemInspectorHeight), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - width, 0), ImGuiCond_Once);
+    ImGui::Begin("Tweak Inspector");
+
+    ImGui::LabelText("Value", "name");
+
+    for (const auto& [name, index] : getTweaks()) {
+        switch (static_cast<ValueType>(index)) {
+        case ValueType::int_: {
+            const auto init = getInitial<int>(name);
+            const auto title = fmt::format("{} ({})", name, init);
+            auto val = get<int>(name);
+            ImGui::InputInt(title.c_str(), &val);
+            set(name, val);
+            break;
+        }
+        case ValueType::float_: {
+            const auto init = getInitial<float>(name);
+            const auto title = fmt::format("{} ({})", name, init);
+            auto val = get<float>(name);
+            ImGui::InputFloat(title.c_str(), &val);
+            set(name, val);
+            break;
+        }
+        case ValueType::vec2: {
+            const auto init = getInitial<glm::vec2>(name);
+            const auto title = fmt::format("{} {}", name, init);
+            auto val = get<glm::vec2>(name);
+            ImGui::InputFloat2(title.c_str(), &val.x);
+            set(name, val);
+            break;
+        }
+        case ValueType::vec3: {
+            const auto init = getInitial<glm::vec3>(name);
+            const auto title = fmt::format("{} {}", name, init);
+            auto val = get<glm::vec3>(name);
+            ImGui::InputFloat3(title.c_str(), &val.x);
+            set(name, val);
+            break;
+        }
+        case ValueType::vec4: {
+            const auto init = getInitial<glm::vec4>(name);
+            const auto title = fmt::format("{} {}", name, init);
+            auto val = get<glm::vec4>(name);
+            ImGui::InputFloat4(title.c_str(), &val.x);
+            set(name, val);
+            break;
+        }
+        case ValueType::string: {
+            const auto init = getInitial<std::string>(name);
+            const auto title = fmt::format("{} (\"{}\")", name, init);
+            auto val = get<std::string>(name);
+            ImGui::InputText(title.c_str(), &val);
+            set(name, val);
+            break;
+        }
+        case ValueType::color: {
+            const auto init = getInitial<myl::Color>(name);
+            const auto title = fmt::format("{} {}", name, init);
+            auto val = get<myl::Color>(name);
+            ImGui::ColorEdit4(name.c_str(), &val.r,
+                ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf
+                    | ImGuiColorEditFlags_Float);
+            set(name, val);
+            break;
+        }
+        case ValueType::last:
+            break;
+        }
     }
 
     ImGui::End();

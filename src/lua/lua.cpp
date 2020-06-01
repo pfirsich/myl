@@ -6,6 +6,7 @@
 
 #include "../modules/input.hpp"
 #include "../modules/timer.hpp"
+#include "../modules/tweak.hpp"
 #include "../modules/window.hpp"
 
 namespace fs = std::filesystem;
@@ -151,6 +152,23 @@ static const char colorlua[] =
             = static_cast<bool (*)(const std::string&)>(myl::modules::input::getKeyboardReleased);
     }
 
+    void addTweakModule(sol::state& lua)
+    {
+        using namespace myl::modules::tweak;
+        std::cout << "Init service 'tweak" << std::endl;
+        auto tweak = lua["myl"]["service"]["tweak"] = lua.create_table();
+        tweak["getInt"] = sol::overload(static_cast<int (*)(const std::string& name)>(get<int>),
+            static_cast<int (*)(const std::string&, const int&)>(get<int>));
+        tweak["getFloat"]
+            = sol::overload(static_cast<float (*)(const std::string& name)>(get<float>),
+                static_cast<float (*)(const std::string&, const float&)>(get<float>));
+        // vecN functions missing, because they need some wrapping, I guess
+        tweak["getString"] = sol::overload(
+            static_cast<std::string (*)(const std::string& name)>(get<std::string>),
+            static_cast<std::string (*)(const std::string&, const std::string&)>(get<std::string>));
+        tweak["save"] = myl::modules::tweak::save;
+    }
+
     State::State(myl::World& world)
         : world_(world)
     {
@@ -255,6 +273,7 @@ static const char colorlua[] =
         addWindowModule(lua_);
         addTimerModule(lua_);
         addInputModule(lua_);
+        addTweakModule(lua_);
 
         connection_ = getDefaultWorld().componentRegistered.connect(
             [this](const Component& component) { componentRegistered(lua_, component); });

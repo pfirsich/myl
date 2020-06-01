@@ -11,10 +11,12 @@
 #include "lua/lua.hpp"
 #include "modules/input.hpp"
 #include "modules/timer.hpp"
+#include "modules/tweak.hpp"
 #include "modules/window.hpp"
 #include "myl.hpp"
 
 using namespace myl::modules;
+using namespace tweak::shortcuts;
 
 struct Transform {
     glm::vec2 position;

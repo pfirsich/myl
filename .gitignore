@@ -1,8 +1,9 @@
-.vscode/
-untracked/
-build/
-todo.md
-imgui.ini
-compile_commands.json
 .clangd/
 .DS_Store
+.vscode/
+build/
+compile_commands.json
+imgui.ini
+todo.md
+tweaks.toml
+untracked/

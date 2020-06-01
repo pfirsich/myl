@@ -22,3 +22,6 @@
 [submodule "deps/implot"]
 	path = deps/implot
 	url = https://github.com/epezent/implot
+[submodule "deps/fmt"]
+	path = deps/fmt
+	url = https://github.com/fmtlib/fmt.git
