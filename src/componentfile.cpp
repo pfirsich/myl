@@ -116,14 +116,12 @@ ComponentFileData loadComponents(std::string_view path)
     if (tbl["enums"]) {
         for (const auto& enum_ : *tbl["enums"].as_array()) {
             const auto& enumTable = *enum_.as_table();
-            const auto enumName = enumTable["name"].as_string()->get();
-            std::cout << "# Enum: " << enumName << std::endl;
             std::vector<std::string> values;
             for (const auto& value : *enumTable["values"].as_array()) {
                 values.push_back(value.as_string()->get());
             }
+            const auto enumName = enumTable["name"].as_string()->get();
             EnumType enumType { values };
-            std::cout << enumType.asString() << std::endl;
             data.enums.insert(enumName, enumType);
         }
     }
@@ -139,12 +137,6 @@ ComponentFileData loadComponents(std::string_view path)
 
         const bool isComponent = structTable["component"].value_or(false);
         data.structs.insert(name, StructData { structType, name, isComponent });
-
-        if (isComponent)
-            std::cout << "# Component: " << name << std::endl;
-        else
-            std::cout << "# Struct: " << name << std::endl;
-        std::cout << structType.asString() << std::endl;
     }
 
     return data;

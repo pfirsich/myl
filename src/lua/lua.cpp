@@ -122,7 +122,6 @@ static const char colorlua[] =
 
     void addWindowModule(sol::state& lua)
     {
-        std::cout << "Init service 'window'" << std::endl;
         auto window = lua["myl"]["service"]["window"] = lua.create_table();
         window["init"] = myl::modules::window::init;
         window["setTitle"] = myl::modules::window::setTitle;
@@ -134,7 +133,6 @@ static const char colorlua[] =
 
     void addTimerModule(sol::state& lua)
     {
-        std::cout << "Init service 'timer'" << std::endl;
         auto timer = lua["myl"]["service"]["timer"] = lua.create_table();
         timer["getTime"] = myl::modules::timer::getTime;
         timer["getDelta"] = myl::modules::timer::getDelta;
@@ -142,7 +140,6 @@ static const char colorlua[] =
 
     void addInputModule(sol::state& lua)
     {
-        std::cout << "Init service 'input'" << std::endl;
         auto input = lua["myl"]["service"]["input"] = lua.create_table();
         input["getKeyboardDown"]
             = static_cast<bool (*)(const std::string&)>(myl::modules::input::getKeyboardDown);
@@ -155,7 +152,6 @@ static const char colorlua[] =
     void addTweakModule(sol::state& lua)
     {
         using namespace myl::modules::tweak;
-        std::cout << "Init service 'tweak" << std::endl;
         auto tweak = lua["myl"]["service"]["tweak"] = lua.create_table();
         tweak["getInt"] = sol::overload(static_cast<int (*)(const std::string& name)>(get<int>),
             static_cast<int (*)(const std::string&, const int&)>(get<int>));
@@ -260,7 +256,6 @@ static const char colorlua[] =
         myl["loadComponents"].set_function(
             static_cast<void (*)(const std::string&)>(myl::loadComponents));
 
-        std::cout << "Load lib" << std::endl;
         lua_.script(liblua);
         lua_.script(mylstring);
         lua_.script(vec2lua);
@@ -268,7 +263,6 @@ static const char colorlua[] =
         lua_.script(vec4lua);
         lua_.script(colorlua);
 
-        std::cout << "Init services" << std::endl;
         myl["service"] = lua_.create_table();
         addWindowModule(lua_);
         addTimerModule(lua_);
