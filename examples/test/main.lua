@@ -30,6 +30,12 @@ function myl.main()
     myl.addComponent(entity, myl.c.Color).value = myl.color.new("#75e5eb")
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(120, 120)
 
+    entity = myl.newEntity()
+    myl.addComponent(entity, myl.c.Name).value:set("BG")
+    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(0, 0)
+    myl.addComponent(entity, myl.c.Color).value = myl.color.new("#f2eeae44")
+    myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(resX, resY)
+
     window.init("myl", resX, resY, false)
     window.setVSync(true)
     local debug = false
