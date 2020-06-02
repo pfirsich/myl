@@ -1,15 +1,29 @@
 local input, timer, window = myl.service.input, myl.service.timer, myl.service.window
 local tweak = myl.service.tweak
 local Tf = tweak.getFloat
+local T2 = tweak.getVec2
+local Tc = tweak.getColor
 
 myl.loadComponents("components.toml")
+
+tweak.set("playerSpeed", 500.0)
 
 myl.registerSystem(
     "PlayerMovement",
     function(dt)
         for entity in myl.foreachEntity(myl.c.Transform, myl.c.PlayerInputState) do
             local trafo, pinput = myl.getComponents(entity, myl.c.Transform, myl.c.PlayerInputState)
-            trafo.position = trafo.position + pinput.moveDir * Tf("playerSpeed", 500) * dt
+            trafo.position = trafo.position + pinput.moveDir * Tf("playerSpeed") * dt
+        end
+    end
+)
+
+myl.registerSystem(
+    "SetColor",
+    function(dt)
+        for entity in myl.foreachEntity(myl.c.Color) do
+            local col = myl.getComponents(entity, myl.c.Color)
+            col.value = Tc("color", myl.color(1, 1, 1, 1))
         end
     end
 )
@@ -44,6 +58,7 @@ function myl.main()
 
         myl.invokeSystem("PlayerInput", dt)
         myl.invokeSystem("PlayerMovement", dt)
+        myl.invokeSystem("SetColor", dt)
 
         window.clear()
         myl.invokeSystem("RectangleRender", dt)

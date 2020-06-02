@@ -37,12 +37,21 @@ namespace modules {
             template <typename T>
             ValuePair<T>& getValuePair(const std::string& name)
             {
-                auto& reg = detail::getRegistry();
+                auto& reg = getRegistry();
                 const auto it = reg.find(name);
                 assert(it != reg.end() && "Unknown tweak");
-                assert(
-                    std::holds_alternative<detail::ValuePair<T>>(it->second) && "Wrong tweak type");
-                return std::get<detail::ValuePair<T>>(it->second);
+                assert(std::holds_alternative<ValuePair<T>>(it->second) && "Wrong tweak type");
+                return std::get<ValuePair<T>>(it->second);
+            }
+
+            // Inserts it if doesn't exist, returns ref to existing element if it does
+            template <typename T>
+            ValuePair<T>& insert(const std::string& name, const T& value)
+            {
+                auto& reg = getRegistry();
+                const auto it = reg.emplace(name, ValuePair<T>(value)).first;
+                assert(std::holds_alternative<ValuePair<T>>(it->second) && "Wrong tweak type");
+                return std::get<ValuePair<T>>(it->second);
             }
         }
 
@@ -60,10 +69,8 @@ namespace modules {
         template <typename T>
         T get(const std::string& name, const T& init)
         {
-            auto& reg = detail::getRegistry();
-            const auto it = reg.emplace(name, detail::ValuePair<T>(init)).first;
-            assert(std::holds_alternative<detail::ValuePair<T>>(it->second) && "Wrong tweak type");
-            return std::get<detail::ValuePair<T>>(it->second).current;
+            auto& val = detail::insert(name, init);
+            return val.current;
         }
 
         template <typename T>
@@ -73,9 +80,10 @@ namespace modules {
         }
 
         template <typename T>
-        void set(const std::string& name, const T& val)
+        void set(const std::string& name, const T& v)
         {
-            detail::getValuePair<T>(name).current = val;
+            auto& val = detail::insert(name, v);
+            val.current = v;
         }
 
         std::vector<std::pair<std::string, size_t>> getTweaks();

@@ -47,3 +47,9 @@ component = true
 fields = [
     {name = "moveDir", type = "vec2"},
 ]
+
+[[structs]]
+name = "TestMarker"
+components = true
+fields = [
+]

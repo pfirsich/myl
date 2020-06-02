@@ -158,10 +158,131 @@ static const char colorlua[] =
         tweak["getFloat"]
             = sol::overload(static_cast<float (*)(const std::string& name)>(get<float>),
                 static_cast<float (*)(const std::string&, const float&)>(get<float>));
-        // vecN functions missing, because they need some wrapping, I guess
         tweak["getString"] = sol::overload(
             static_cast<std::string (*)(const std::string& name)>(get<std::string>),
             static_cast<std::string (*)(const std::string&, const std::string&)>(get<std::string>));
+
+        // yaaaaaasss. copy&paste! I'm such good coder :):):):)
+
+        tweak["_getVec2"] = sol::overload(
+            [](const std::string& name) -> std::tuple<float, float> {
+                const auto v = get<glm::vec2>(name);
+                return std::make_tuple(v.x, v.y);
+            },
+            [](const std::string& name, float x, float y) -> std::tuple<float, float> {
+                const auto v = get(name, glm::vec2(x, y));
+                return std::make_tuple(v.x, v.y);
+            });
+        lua.script(R"(
+            local _getVec2 = myl.service.tweak._getVec2
+            function myl.service.tweak.getVec2(name, vec)
+                if vec then
+                    return myl.vec2(_getVec2(name, vec.x, vec.y))
+                else
+                    return myl.vec2(_getVec2(name))
+                end
+            end)");
+
+        tweak["_getVec3"] = sol::overload(
+            [](const std::string& name) -> std::tuple<float, float, float> {
+                const auto v = get<glm::vec3>(name);
+                return std::make_tuple(v.x, v.y, v.z);
+            },
+            [](const std::string& name, float x, float y,
+                float z) -> std::tuple<float, float, float> {
+                const auto v = get(name, glm::vec3(x, y, z));
+                return std::make_tuple(v.x, v.y, v.z);
+            });
+        lua.script(R"(
+            local _getVec3 = myl.service.tweak._getVec3
+            function myl.service.tweak.getVec3(name, vec)
+                if vec then
+                    return myl.vec3(_getVec3(name, vec.x, vec.y, vec.z))
+                else
+                    return myl.vec3(_getVec3(name))
+                end
+            end)");
+
+        tweak["_getVec4"] = sol::overload(
+            [](const std::string& name) -> std::tuple<float, float, float, float> {
+                const auto v = get<glm::vec4>(name);
+                return std::make_tuple(v.x, v.y, v.z, v.w);
+            },
+            [](const std::string& name, float x, float y, float z,
+                float w) -> std::tuple<float, float, float, float> {
+                const auto v = get(name, glm::vec4(x, y, z, w));
+                return std::make_tuple(v.x, v.y, v.z, v.w);
+            });
+        lua.script(R"(
+            local _getVec4 = myl.service.tweak._getVec4
+            function myl.service.tweak.getVec4(name, vec)
+                if vec then
+                    return myl.vec4(_getVec4(name, vec.x, vec.y, vec.z, vec.w))
+                else
+                    return myl.vec4(_getVec4(name))
+                end
+            end)");
+
+        tweak["_getColor"] = sol::overload(
+            [](const std::string& name) -> std::tuple<float, float, float, float> {
+                const auto v = get<myl::Color>(name);
+                return std::make_tuple(v.r, v.g, v.b, v.a);
+            },
+            [](const std::string& name, float r, float g, float b,
+                float a) -> std::tuple<float, float, float, float> {
+                const auto v = get(name, myl::Color(r, g, b, a));
+                return std::make_tuple(v.r, v.g, v.b, v.a);
+            });
+        lua.script(R"(
+            local _getColor = myl.service.tweak._getColor
+
+            function myl.service.tweak.getColor(name, col)
+                if col then
+                    return myl.color(_getColor(name, col.r, col.g, col.b, col.a))
+                else
+                    return myl.color(_getColor(name))
+                end
+            end)");
+
+        tweak["_setInt"] = set<int>;
+        tweak["_setFloat"] = set<float>;
+        tweak["_setVec2"]
+            = [](const std::string& name, float x, float y) { set(name, glm::vec2(x, y)); };
+        tweak["_setVec3"] = [](const std::string& name, float x, float y, float z) {
+            set(name, glm::vec3(x, y, z));
+        };
+        tweak["_setVec4"] = [](const std::string& name, float x, float y, float z, float w) {
+            set(name, glm::vec4(x, y, z, w));
+        };
+        tweak["_setColor"] = [](const std::string& name, float r, float g, float b, float a) {
+            set(name, myl::Color(r, g, b, a));
+        };
+
+        lua.script(R"(
+            local _setInt = myl.service.tweak._setInt
+            local _setFloat = myl.service.tweak._setFloat
+            local _setVec2 = myl.service.tweak._setVec2
+            local _setVec3 = myl.service.tweak._setVec3
+            local _setVec4 = myl.service.tweak._setVec4
+            local _setColor = myl.service.tweak._setColor
+
+            function myl.service.tweak.set(name, val)
+                if type(val) == "number" then
+                    _setFloat(name, val)
+                elseif type(val) == "cdata" then
+                    if ffi.istype("vec2", val) then
+                        _setVec2(name, val.x, val.y)
+                    elseif ffi.istype("vec3", val) then
+                        _setVec3(name, val.x, val.y, val.z)
+                    elseif fii.istype("vec4", val) then
+                        _setVec4(name, val.x, val.y, val.z, val.w)
+                    elseif ffi.istype("color", val) then
+                        _setColor(name, val.r, val.g, val.b, val.a)
+                    end
+                end
+            end
+        )");
+
         tweak["save"] = myl::modules::tweak::save;
     }
 
