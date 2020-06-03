@@ -36,7 +36,9 @@ function myl.main()
     myl.addComponent(entity, myl.c.Color).value = myl.color.new("#af19bf")
     myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX / 2, resY / 2)
     myl.addComponent(entity, myl.c.PlayerInputState)
-    myl.addComponent(entity, myl.c.CircleRender).radius = 40
+    local circle = myl.addComponent(entity, myl.c.CircleRender)
+    circle.radius = 40
+    circle.pointCount = 32
 
     entity = myl.newEntity()
     myl.addComponent(entity, myl.c.Name).value:set("Someting")

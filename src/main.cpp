@@ -37,6 +37,7 @@ struct RectangleRender {
 
 struct CircleRender {
     float radius;
+    size_t pointCount;
 };
 
 struct Color {
@@ -141,6 +142,8 @@ struct CircleRenderSystem : public myl::RegisteredSystem<CircleRenderSystem>,
         static const auto cCircleRender = myl::getComponentId("CircleRender");
         const auto circleRender = myl::getComponent<CircleRender>(entity, cCircleRender);
         shape.setRadius(circleRender->radius);
+        if (shape.getPointCount() != circleRender->pointCount)
+            shape.setPointCount(circleRender->pointCount);
     }
 };
 
@@ -192,8 +195,11 @@ int main(int argc, char** argv)
 
     myl::registerComponent(
         "RectangleRender", myl::StructBuilder().addField("size", &RectangleRender::size).build());
-    myl::registerComponent(
-        "CircleRender", myl::StructBuilder().addField("radius", &CircleRender::radius).build());
+    myl::registerComponent("CircleRender",
+        myl::StructBuilder()
+            .addField("radius", &CircleRender::radius)
+            .addField("pointCount", &CircleRender::pointCount)
+            .build());
     myl::registerComponent("Color", myl::StructBuilder().addField("value", &Color::value).build());
 
     PlayerInputSystem playerInput;
