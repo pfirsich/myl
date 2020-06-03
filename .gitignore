@@ -4,6 +4,7 @@
 build/
 compile_commands.json
 imgui.ini
+notes
 todo.md
 tweaks.toml
 untracked/
