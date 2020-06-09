@@ -27,10 +27,6 @@ struct Velocity {
     glm::vec2 value;
 };
 
-struct PlayerInputState {
-    glm::vec2 moveDir;
-};
-
 struct RectangleRender {
     glm::vec2 size;
 };
@@ -63,22 +59,6 @@ static sf::Font& getFont()
     }
     return font;
 }
-
-struct PlayerInputSystem : public myl::RegisteredSystem<PlayerInputSystem> {
-    inline static const std::string name = "PlayerInput";
-
-    void update(float /*dt*/)
-    {
-        const auto cPlayerInputState = myl::getComponentId("PlayerInputState");
-        for (auto entity : myl::getEntities(cPlayerInputState)) {
-            auto input = myl::getComponent<PlayerInputState>(entity, cPlayerInputState);
-            const auto lr = floatKey(input::Key::right) - floatKey(input::Key::left);
-            const auto ud = floatKey(input::Key::down) - floatKey(input::Key::up);
-            const auto moveDir = glm::vec2(lr, ud);
-            input->moveDir = moveDir / (glm::length(moveDir) + 1.0e-9f);
-        }
-    }
-};
 
 template <typename Derived, typename Shape>
 class ShapeRenderSystem {
@@ -208,7 +188,6 @@ int main(int argc, char** argv)
             .build());
     myl::registerComponent("Color", myl::StructBuilder().addField("value", &Color::value).build());
 
-    PlayerInputSystem playerInput;
     RectangleRenderSystem rectangleRender;
     CircleRenderSystem circleRender;
     DrawFpsSystem drawFpsSystem;

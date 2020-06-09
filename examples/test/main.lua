@@ -9,6 +9,20 @@ myl.loadComponents("components.toml")
 tweak.set("playerSpeed", 500.0)
 
 myl.registerSystem(
+    "PlayerInput",
+    function(dt)
+        for entity in myl.foreachEntity(myl.c.PlayerInputState) do
+            local pinput = myl.getComponents(entity, myl.c.PlayerInputState)
+            local lr = (input.getKeyboardDown("right") and 1 or 0)
+                     - (input.getKeyboardDown("left") and 1 or 0)
+            local ud = (input.getKeyboardDown("down") and 1 or 0)
+                     - (input.getKeyboardDown("up") and 1 or 0)
+            pinput.moveDir = myl.vec2(lr, ud):normalized()
+        end
+    end
+)
+
+myl.registerSystem(
     "PlayerMovement",
     function(dt)
         for entity in myl.foreachEntity(myl.c.Transform, myl.c.PlayerInputState) do
