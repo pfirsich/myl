@@ -42,21 +42,27 @@ myl.registerSystem(
     end
 )
 
+local function addTransform(entity, x, y)
+    local trafo = myl.addComponent(entity, myl.c.Transform)
+    trafo.scale = myl.vec2(1, 1)
+    trafo.position = myl.vec2(x, y)
+end
+
 function myl.main()
     local resX, resY = 1024, 768
 
     local entity = myl.newEntity()
+    addTransform(entity, resX / 2, resY / 2)
     myl.addComponent(entity, myl.c.Name).value:set("Player")
     myl.addComponent(entity, myl.c.Color).value = myl.color.new("#af19bf")
-    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(resX / 2, resY / 2)
     myl.addComponent(entity, myl.c.PlayerInputState)
     local circle = myl.addComponent(entity, myl.c.CircleRender)
     circle.radius = 40
     circle.pointCount = 32
 
     entity = myl.newEntity()
+    addTransform(entity, 200, 200)
     myl.addComponent(entity, myl.c.Name).value:set("Someting")
-    myl.addComponent(entity, myl.c.Transform).position = myl.vec2(200, 200)
     myl.addComponent(entity, myl.c.Color).value = myl.color.new("#75e5eb")
     myl.addComponent(entity, myl.c.RectangleRender).size = myl.vec2(120, 120)
 

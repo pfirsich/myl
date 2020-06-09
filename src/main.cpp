@@ -21,6 +21,8 @@ using namespace tweak::shortcuts;
 struct Transform {
     glm::vec2 position;
     float angle;
+    glm::vec2 scale;
+    glm::vec2 origin;
 };
 
 struct Velocity {
@@ -72,25 +74,32 @@ public:
     void update(float /*dt*/)
     {
         static const auto cTransform = myl::getComponentId("Transform");
-        static const auto cColor = myl::getComponentId("Color");
         for (auto entity : myl::getEntities(cTransform + componentId_)) {
             auto& shape = shapes_.template get<true>(entity);
             const auto trafo = myl::getComponent<Transform>(entity, cTransform);
             shape.setPosition(trafo->position.x, trafo->position.y);
             shape.setRotation(trafo->angle / M_PI * 180.0f);
+            shape.setOrigin(trafo->origin.x, trafo->origin.y);
+            shape.setScale(trafo->scale.x, trafo->scale.y);
             static_cast<Derived*>(this)->updateShape(entity, shape);
-            if (myl::hasComponent(entity, cColor)) {
-                auto& color = myl::getComponent<Color>(entity, cColor)->value;
-                shape.setFillColor(sf::Color(static_cast<uint32_t>(color)));
-            } else {
-                shape.setFillColor(sf::Color(255, 255, 255, 255));
-            }
+            shape.setFillColor(getColor(entity));
             window::getWindow().draw(shape);
         }
         shapes_.remove();
     }
 
 private:
+    static sf::Color getColor(myl::EntityId entity)
+    {
+        static const auto cColor = myl::getComponentId("Color");
+        if (myl::hasComponent(entity, cColor)) {
+            auto& color = myl::getComponent<Color>(entity, cColor)->value;
+            return sf::Color(static_cast<uint32_t>(color));
+        } else {
+            return sf::Color(255, 255, 255, 255);
+        }
+    }
+
     myl::ComponentId componentId_;
     myl::SystemData<Shape> shapes_;
 };
@@ -177,6 +186,8 @@ int main(int argc, char** argv)
         myl::StructBuilder()
             .addField("position", &Transform::position)
             .addField("angle", &Transform::angle)
+            .addField("scale", &Transform::scale)
+            .addField("origin", &Transform::origin)
             .build());
 
     myl::registerComponent(
