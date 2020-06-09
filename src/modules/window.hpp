@@ -16,6 +16,7 @@ namespace modules {
         bool update();
         void clear();
         void present();
+        sf::Font& getDefaultFont();
     }
 }
 }

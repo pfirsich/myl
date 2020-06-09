@@ -1,9 +1,12 @@
 #include "window.hpp"
 
+#include <cassert>
+
 #include <SFML/Window.hpp>
 #include <imgui-SFML.h>
 #include <imgui.h>
 
+#include "defaultfont.hpp"
 #include "input.hpp"
 #include "timer.hpp"
 
@@ -82,6 +85,17 @@ namespace modules {
             ImGui::EndFrame();
             ImGui::SFML::Render(getWindow());
             getWindow().display();
+        }
+
+        sf::Font& getDefaultFont()
+        {
+            static sf::Font font;
+            static bool loaded = false;
+            if (!loaded) {
+                assert(font.loadFromMemory(myl::defaultFont, myl::defaultFontLen));
+                loaded = true;
+            }
+            return font;
         }
     }
 }

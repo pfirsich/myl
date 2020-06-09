@@ -18,7 +18,7 @@ set(CMAKE_XCODE_SCHEME_ADDRESS_SANITIZER_USE_AFTER_RETURN ON)
 set(SRC
   color.cpp
   componentfile.cpp
-  debugsystem.cpp
+  components.cpp
   defaultfont.cpp
   ecs.cpp
   fieldtype.cpp
@@ -31,6 +31,10 @@ set(SRC
   modules/window.cpp
   myl.cpp
   struct.cpp
+  systems.cpp
+  systems/debug.cpp
+  systems/drawfps.cpp
+  systems/shaperender.cpp
   util.cpp
 )
 list(TRANSFORM SRC PREPEND src/)
@@ -41,6 +45,7 @@ set(IMPLOT_SRC deps/implot/implot.cpp deps/implot/implot_demo.cpp)
 list(APPEND SRC ${IMPLOT_SRC})
 
 include_directories(include)
+include_directories(src)
 
 include_directories(deps/sol2/single/include)
 
