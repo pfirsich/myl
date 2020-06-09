@@ -44,6 +44,10 @@ struct Color {
     myl::Color value;
 };
 
+struct Name {
+    myl::String value;
+};
+
 float floatKey(input::Key key)
 {
     return input::getKeyboardDown(key) ? 1.0f : 0.0f;
@@ -186,6 +190,8 @@ int main(int argc, char** argv)
         std::cerr << "Game directory not found." << std::endl;
         return EXIT_FAILURE;
     }
+
+    myl::registerComponent("Name", myl::StructBuilder().addField("value", &Name::value).build());
 
     myl::registerComponent("Transform",
         myl::StructBuilder()

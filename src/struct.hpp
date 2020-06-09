@@ -117,4 +117,10 @@ inline void StructBuilder::addField<Color>(const std::string& name)
     addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::color));
 }
 
+template <>
+inline void StructBuilder::addField<String>(const std::string& name)
+{
+    addField(name, std::make_shared<StringFieldType>());
+}
+
 }

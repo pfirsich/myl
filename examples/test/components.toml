@@ -1,11 +1,4 @@
 [[structs]]
-name = "Name"
-component = true
-fields = [
-    {name = "value", type = "string"},
-]
-
-[[structs]]
 name = "StringArray"
 component = true
 fields = [
