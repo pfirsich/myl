@@ -141,6 +141,7 @@ end
 -- everything else
 
 function vec2.fromPolar(angle, radius)
+    radius = radius or 1.0
     return vec2_type(cos(angle) * radius, sin(angle) * radius)
 end
 
