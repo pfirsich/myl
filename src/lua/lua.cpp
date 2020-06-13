@@ -46,35 +46,35 @@ static const char colorlua[] =
     std::string getCTypeName(PrimitiveFieldType::Type type)
     {
         switch (type) {
-        case PrimitiveFieldType::Type::invalid:
+        case PrimitiveFieldType::Type::Invalid:
             assert(false && "Invalid BuiltinFieldType");
-        case PrimitiveFieldType::Type::bool_:
+        case PrimitiveFieldType::Type::Bool:
             return "bool";
-        case PrimitiveFieldType::Type::u8:
+        case PrimitiveFieldType::Type::U8:
             return "uint8_t";
-        case PrimitiveFieldType::Type::i8:
+        case PrimitiveFieldType::Type::I8:
             return "int8_t";
-        case PrimitiveFieldType::Type::u16:
+        case PrimitiveFieldType::Type::U16:
             return "uint16_t";
-        case PrimitiveFieldType::Type::i16:
+        case PrimitiveFieldType::Type::I16:
             return "int16_t";
-        case PrimitiveFieldType::Type::u32:
+        case PrimitiveFieldType::Type::U32:
             return "uint32_t";
-        case PrimitiveFieldType::Type::i32:
+        case PrimitiveFieldType::Type::I32:
             return "int32_t";
-        case PrimitiveFieldType::Type::u64:
+        case PrimitiveFieldType::Type::U64:
             return "uint64_t";
-        case PrimitiveFieldType::Type::i64:
+        case PrimitiveFieldType::Type::I64:
             return "int64_t";
-        case PrimitiveFieldType::Type::f32:
+        case PrimitiveFieldType::Type::F32:
             return "float";
-        case PrimitiveFieldType::Type::vec2:
+        case PrimitiveFieldType::Type::Vec2:
             return "vec2";
-        case PrimitiveFieldType::Type::vec3:
+        case PrimitiveFieldType::Type::Vec3:
             return "vec3";
-        case PrimitiveFieldType::Type::vec4:
+        case PrimitiveFieldType::Type::Vec4:
             return "vec4";
-        case PrimitiveFieldType::Type::color:
+        case PrimitiveFieldType::Type::Color:
             return "color";
         default:
             assert(false && "Unknown BuiltinFieldType");

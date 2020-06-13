@@ -84,37 +84,37 @@ private:
 template <>
 inline void StructBuilder::addField<float>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::f32));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::F32));
 }
 
 template <>
 inline void StructBuilder::addField<size_t>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::u64));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::U64));
 }
 
 template <>
 inline void StructBuilder::addField<glm::vec2>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec2));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::Vec2));
 }
 
 template <>
 inline void StructBuilder::addField<glm::vec3>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec3));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::Vec3));
 }
 
 template <>
 inline void StructBuilder::addField<glm::vec4>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::vec4));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::Vec4));
 }
 
 template <>
 inline void StructBuilder::addField<Color>(const std::string& name)
 {
-    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::color));
+    addField(name, std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::Color));
 }
 
 template <>

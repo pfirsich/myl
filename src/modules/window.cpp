@@ -19,6 +19,19 @@ namespace modules {
                 static std::unique_ptr<sf::RenderWindow> window(nullptr);
                 return window;
             }
+
+            // How many device pixels per logical pixel?
+            float getDevicePixelRatio()
+            {
+#if __APPLE__
+                const auto mode = sf::VideoMode::getDesktopMode();
+                if (mode.width > 1920) {
+                    // Apple and more then full HD? Must be retina aka hight DPI (#science)
+                    return 2.f;
+                }
+#endif
+                return 1.f;
+            }
         }
 
         void setImguiStyle(); // imguistyle.cpp
@@ -117,20 +130,6 @@ namespace modules {
             }
             return font;
         }
-
-        // How many device pixels per logical pixel?
-        float getDevicePixelRatio()
-        {
-#if __APPLE__
-            const auto mode = sf::VideoMode::getDesktopMode();
-            if (mode.width > 1920) {
-                // Apple and more then full HD? Must be retina aka hight DPI (#science)
-                return 2.f;
-            }
-#endif
-            return 1.f;
-        }
-
     }
 }
 }

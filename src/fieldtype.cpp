@@ -37,7 +37,7 @@ size_t FieldType::getAlignment() const
 }
 
 ErrorFieldType::ErrorFieldType(const std::string& typeName)
-    : FieldType(FieldType::error)
+    : FieldType(FieldType::Error)
     , typeName(typeName)
 {
 }
@@ -48,25 +48,25 @@ std::string ErrorFieldType::asString() const
 }
 
 const std::map<std::string, PrimitiveFieldType::Type> PrimitiveFieldType::typeFromString {
-    { "invalid", invalid },
-    { "bool", bool_ },
-    { "u8", u8 },
-    { "i8", i8 },
-    { "u16", u16 },
-    { "i16", i16 },
-    { "u32", u32 },
-    { "i32", i32 },
-    { "u64", u64 },
-    { "i64", i64 },
-    { "f32", f32 },
-    { "vec2", vec2 },
-    { "vec3", vec3 },
-    { "vec4", vec4 },
-    { "color", color },
+    { "invalid", Invalid },
+    { "bool", Bool },
+    { "u8", U8 },
+    { "i8", I8 },
+    { "u16", U16 },
+    { "i16", I16 },
+    { "u32", U32 },
+    { "i32", I32 },
+    { "u64", U64 },
+    { "i64", I64 },
+    { "f32", F32 },
+    { "vec2", Vec2 },
+    { "vec3", Vec3 },
+    { "vec4", Vec4 },
+    { "color", Color },
 };
 
 PrimitiveFieldType::PrimitiveFieldType(Type type)
-    : FieldType(FieldType::builtin)
+    : FieldType(FieldType::Builtin)
     , type(type)
 {
 }
@@ -74,35 +74,35 @@ PrimitiveFieldType::PrimitiveFieldType(Type type)
 std::string PrimitiveFieldType::asString() const
 {
     switch (type) {
-    case Type::invalid:
+    case Type::Invalid:
         return "invalid";
-    case Type::bool_:
+    case Type::Bool:
         return "bool";
-    case Type::u8:
+    case Type::U8:
         return "u8";
-    case Type::i8:
+    case Type::I8:
         return "i8";
-    case Type::u16:
+    case Type::U16:
         return "u16";
-    case Type::i16:
+    case Type::I16:
         return "i16";
-    case Type::u32:
+    case Type::U32:
         return "u32";
-    case Type::i32:
+    case Type::I32:
         return "i32";
-    case Type::u64:
+    case Type::U64:
         return "u64";
-    case Type::i64:
+    case Type::I64:
         return "i64";
-    case Type::f32:
+    case Type::F32:
         return "f32";
-    case Type::vec2:
+    case Type::Vec2:
         return "vec2";
-    case Type::vec3:
+    case Type::Vec3:
         return "vec3";
-    case Type::vec4:
+    case Type::Vec4:
         return "vec4";
-    case Type::color:
+    case Type::Color:
         return "color";
     default:
         return "unknown";
@@ -112,35 +112,35 @@ std::string PrimitiveFieldType::asString() const
 size_t PrimitiveFieldType::getSize() const
 {
     switch (type) {
-    case Type::invalid:
+    case Type::Invalid:
         assert(false && "type = invalid");
-    case Type::bool_:
+    case Type::Bool:
         return sizeof(bool);
-    case Type::u8:
+    case Type::U8:
         return sizeof(uint8_t);
-    case Type::i8:
+    case Type::I8:
         return sizeof(int8_t);
-    case Type::u16:
+    case Type::U16:
         return sizeof(uint16_t);
-    case Type::i16:
+    case Type::I16:
         return sizeof(int16_t);
-    case Type::u32:
+    case Type::U32:
         return sizeof(uint32_t);
-    case Type::i32:
+    case Type::I32:
         return sizeof(int32_t);
-    case Type::u64:
+    case Type::U64:
         return sizeof(uint64_t);
-    case Type::i64:
+    case Type::I64:
         return sizeof(int64_t);
-    case Type::f32:
+    case Type::F32:
         return sizeof(float);
-    case Type::vec2:
+    case Type::Vec2:
         return sizeof(float[2]);
-    case Type::vec3:
+    case Type::Vec3:
         return sizeof(float[3]);
-    case Type::vec4:
+    case Type::Vec4:
         return sizeof(float[4]);
-    case Type::color:
+    case Type::Color:
         return sizeof(Color);
     default:
         return 0;
@@ -150,49 +150,49 @@ size_t PrimitiveFieldType::getSize() const
 size_t PrimitiveFieldType::getAlignment() const
 {
     switch (type) {
-    case Type::invalid:
+    case Type::Invalid:
         assert(false && "type = invalid");
-    case Type::bool_:
+    case Type::Bool:
         return std::alignment_of_v<bool>;
-    case Type::u8:
+    case Type::U8:
         return std::alignment_of_v<uint8_t>;
-    case Type::i8:
+    case Type::I8:
         return std::alignment_of_v<int8_t>;
-    case Type::u16:
+    case Type::U16:
         return std::alignment_of_v<uint16_t>;
-    case Type::i16:
+    case Type::I16:
         return std::alignment_of_v<int16_t>;
-    case Type::u32:
+    case Type::U32:
         return std::alignment_of_v<uint32_t>;
-    case Type::i32:
+    case Type::I32:
         return std::alignment_of_v<int32_t>;
-    case Type::u64:
+    case Type::U64:
         return std::alignment_of_v<uint64_t>;
-    case Type::i64:
+    case Type::I64:
         return std::alignment_of_v<int64_t>;
-    case Type::f32:
+    case Type::F32:
         return std::alignment_of_v<float>;
-    case Type::vec2:
+    case Type::Vec2:
         return std::alignment_of_v<float[2]>;
-    case Type::vec3:
+    case Type::Vec3:
         return std::alignment_of_v<float[3]>;
-    case Type::vec4:
+    case Type::Vec4:
         return std::alignment_of_v<float[4]>;
-    case Type::color:
-        return std::alignment_of_v<Color>;
+    case Type::Color:
+        return std::alignment_of_v<myl::Color>;
     default:
         return 0;
     };
 }
 
 StringFieldType::StringFieldType()
-    : FieldType(FieldType::string)
+    : FieldType(FieldType::String)
 {
 }
 
 void StringFieldType::free(void* ptr) const
 {
-    reinterpret_cast<String*>(ptr)->~String();
+    reinterpret_cast<myl::String*>(ptr)->~String();
 }
 
 std::string StringFieldType::asString() const
@@ -207,11 +207,11 @@ size_t StringFieldType::getSize() const
 
 size_t StringFieldType::getAlignment() const
 {
-    return std::alignment_of_v<String>;
+    return std::alignment_of_v<myl::String>;
 }
 
 EnumFieldType::EnumFieldType(const std::string& name)
-    : FieldType(FieldType::enum_)
+    : FieldType(FieldType::Enum)
     , name(name)
 {
 }
@@ -232,7 +232,7 @@ size_t EnumFieldType::getAlignment() const
 }
 
 ArrayFieldType::ArrayFieldType(std::shared_ptr<FieldType> elementType, size_t size)
-    : FieldType(FieldType::array)
+    : FieldType(FieldType::Array)
     , elementType(std::move(elementType))
     , size(size)
 {
@@ -266,29 +266,29 @@ size_t ArrayFieldType::getAlignment() const
 }
 
 VectorFieldType::VectorFieldType(std::shared_ptr<FieldType> elementType)
-    : FieldType(FieldType::vector)
+    : FieldType(FieldType::Vector)
     , elementType(std::move(elementType))
 {
 }
 
 size_t VectorFieldType::getSize() const
 {
-    return sizeof(Vector);
+    return sizeof(myl::Vector);
 }
 
 size_t VectorFieldType::getAlignment() const
 {
-    return std::alignment_of_v<Vector>;
+    return std::alignment_of_v<myl::Vector>;
 }
 
 void VectorFieldType::init(void* ptr) const
 {
-    new (ptr) Vector(elementType.get());
+    new (ptr) myl::Vector(elementType.get());
 }
 
 void VectorFieldType::free(void* ptr) const
 {
-    reinterpret_cast<Vector*>(ptr)->~Vector();
+    reinterpret_cast<myl::Vector*>(ptr)->~Vector();
 }
 
 std::string VectorFieldType::asString() const
@@ -297,7 +297,7 @@ std::string VectorFieldType::asString() const
 }
 
 MapFieldType::MapFieldType(std::shared_ptr<FieldType> keyType, std::shared_ptr<FieldType> valueType)
-    : FieldType(FieldType::map)
+    : FieldType(FieldType::Map)
     , keyType(std::move(keyType))
     , valueType(std::move(valueType))
 {
@@ -319,7 +319,7 @@ std::string MapFieldType::asString() const
 }
 
 StructFieldType::StructFieldType(const std::string& name)
-    : FieldType(FieldType::struct_)
+    : FieldType(FieldType::Struct)
     , name(name)
 {
 }
@@ -340,7 +340,7 @@ std::string StructFieldType::asString() const
 }
 
 EnumType::EnumType(const std::vector<std::string>& valueNames)
-    : underlyingType(std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::i32))
+    : underlyingType(std::make_shared<PrimitiveFieldType>(PrimitiveFieldType::I32))
 {
     for (size_t i = 0; i < valueNames.size(); ++i) {
         values.emplace_back(valueNames[i], static_cast<int64_t>(i));

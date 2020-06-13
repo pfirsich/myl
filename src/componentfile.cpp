@@ -90,7 +90,7 @@ bool hasErrorType(StructType& structType)
         bool has = false;
         traverse(
             [&has](std::shared_ptr<FieldType>& fieldType) {
-                has = has || fieldType->fieldType == FieldType::error;
+                has = has || fieldType->fieldType == FieldType::Error;
             },
             field);
         if (has)

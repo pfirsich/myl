@@ -55,8 +55,8 @@ namespace modules {
             }
         }
 
-        enum class ValueType { int_, float_, vec2, vec3, vec4, string, color, last };
-        static_assert(static_cast<size_t>(ValueType::last) == std::variant_size_v<detail::Value>);
+        enum class ValueType { Int, Float, Vec2, Vec3, Vec4, String, Color, Last };
+        static_assert(static_cast<size_t>(ValueType::Last) == std::variant_size_v<detail::Value>);
 
         void save();
 

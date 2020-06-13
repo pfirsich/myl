@@ -9,7 +9,7 @@
 namespace myl {
 
 struct FieldType {
-    enum Type { invalid, error, builtin, string, enum_, struct_, array, vector, map } fieldType;
+    enum Type { Invalid, Error, Builtin, String, Enum, Struct, Array, Vector, Map } fieldType;
 
     FieldType(Type fieldType);
     virtual ~FieldType() = default;
@@ -31,21 +31,21 @@ struct ErrorFieldType : public FieldType {
 
 struct PrimitiveFieldType : public FieldType {
     enum Type {
-        invalid,
-        bool_,
-        u8,
-        i8,
-        u16,
-        i16,
-        u32,
-        i32,
-        u64,
-        i64,
-        f32,
-        vec2,
-        vec3,
-        vec4,
-        color,
+        Invalid,
+        Bool,
+        U8,
+        I8,
+        U16,
+        I16,
+        U32,
+        I32,
+        U64,
+        I64,
+        F32,
+        Vec2,
+        Vec3,
+        Vec4,
+        Color,
     } type;
 
     static const std::map<std::string, Type> typeFromString;
@@ -147,21 +147,21 @@ template <typename R = void, typename Func>
 R visit(Func&& func, std::shared_ptr<FieldType>& fieldType)
 {
     switch (fieldType->fieldType) {
-    case FieldType::error:
+    case FieldType::Error:
         return func(std::dynamic_pointer_cast<ErrorFieldType>(fieldType));
-    case FieldType::builtin:
+    case FieldType::Builtin:
         return func(std::dynamic_pointer_cast<PrimitiveFieldType>(fieldType));
-    case FieldType::string:
+    case FieldType::String:
         return func(std::dynamic_pointer_cast<StringFieldType>(fieldType));
-    case FieldType::enum_:
+    case FieldType::Enum:
         return func(std::dynamic_pointer_cast<EnumFieldType>(fieldType));
-    case FieldType::struct_:
+    case FieldType::Struct:
         return func(std::dynamic_pointer_cast<StructFieldType>(fieldType));
-    case FieldType::array:
+    case FieldType::Array:
         return func(std::dynamic_pointer_cast<ArrayFieldType>(fieldType));
-    case FieldType::vector:
+    case FieldType::Vector:
         return func(std::dynamic_pointer_cast<VectorFieldType>(fieldType));
-    case FieldType::map:
+    case FieldType::Map:
         return func(std::dynamic_pointer_cast<MapFieldType>(fieldType));
     default:
         assert(false && "Invalid FieldType");
@@ -172,11 +172,11 @@ template <typename Func>
 void traverse(Func&& func, std::shared_ptr<FieldType>& fieldType)
 {
     func(fieldType);
-    if (fieldType->fieldType == FieldType::array) {
+    if (fieldType->fieldType == FieldType::Array) {
         traverse(func, dynamic_cast<ArrayFieldType*>(fieldType.get())->elementType);
-    } else if (fieldType->fieldType == FieldType::vector) {
+    } else if (fieldType->fieldType == FieldType::Vector) {
         traverse(func, dynamic_cast<VectorFieldType*>(fieldType.get())->elementType);
-    } else if (fieldType->fieldType == FieldType::map) {
+    } else if (fieldType->fieldType == FieldType::Map) {
         const auto mapFieldType = dynamic_cast<MapFieldType*>(fieldType.get());
         traverse(func, mapFieldType->keyType);
         traverse(func, mapFieldType->valueType);

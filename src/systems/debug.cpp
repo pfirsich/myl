@@ -290,7 +290,7 @@ void DebugSystem::showTweakInspector()
 
     for (const auto& [name, index] : getTweaks()) {
         switch (static_cast<ValueType>(index)) {
-        case ValueType::int_: {
+        case ValueType::Int: {
             const auto init = getInitial<int>(name);
             const auto title = fmt::format("{} ({})", name, init);
             auto val = get<int>(name);
@@ -298,7 +298,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::float_: {
+        case ValueType::Float: {
             const auto init = getInitial<float>(name);
             const auto title = fmt::format("{} ({})", name, init);
             auto val = get<float>(name);
@@ -306,7 +306,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::vec2: {
+        case ValueType::Vec2: {
             const auto init = getInitial<glm::vec2>(name);
             const auto title = fmt::format("{} {}", name, init);
             auto val = get<glm::vec2>(name);
@@ -314,7 +314,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::vec3: {
+        case ValueType::Vec3: {
             const auto init = getInitial<glm::vec3>(name);
             const auto title = fmt::format("{} {}", name, init);
             auto val = get<glm::vec3>(name);
@@ -322,7 +322,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::vec4: {
+        case ValueType::Vec4: {
             const auto init = getInitial<glm::vec4>(name);
             const auto title = fmt::format("{} {}", name, init);
             auto val = get<glm::vec4>(name);
@@ -330,7 +330,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::string: {
+        case ValueType::String: {
             const auto init = getInitial<std::string>(name);
             const auto title = fmt::format("{} (\"{}\")", name, init);
             auto val = get<std::string>(name);
@@ -338,7 +338,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::color: {
+        case ValueType::Color: {
             const auto init = getInitial<myl::Color>(name);
             const auto title = fmt::format("{} {}", name, init);
             auto val = get<myl::Color>(name);
@@ -348,7 +348,7 @@ void DebugSystem::showTweakInspector()
             set(name, val);
             break;
         }
-        case ValueType::last:
+        case ValueType::Last:
             break;
         }
     }
@@ -368,49 +368,49 @@ void DebugSystem::showFieldElement(
     const std::string& name, std::shared_ptr<myl::FieldType> fieldType, void* ptr)
 {
     switch (fieldType->fieldType) {
-    case myl::FieldType::builtin: {
+    case myl::FieldType::Builtin: {
         auto ft = std::dynamic_pointer_cast<myl::PrimitiveFieldType>(fieldType);
         switch (ft->type) {
-        case myl::PrimitiveFieldType::bool_:
+        case myl::PrimitiveFieldType::Bool:
             ImGui::Checkbox(name.c_str(), reinterpret_cast<bool*>(ptr));
             break;
-        case myl::PrimitiveFieldType::u8:
+        case myl::PrimitiveFieldType::U8:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U8, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::PrimitiveFieldType::i8:
+        case myl::PrimitiveFieldType::I8:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S8, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::PrimitiveFieldType::u16:
+        case myl::PrimitiveFieldType::U16:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U16, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::PrimitiveFieldType::i16:
+        case myl::PrimitiveFieldType::I16:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S16, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::PrimitiveFieldType::u32:
+        case myl::PrimitiveFieldType::U32:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U32, ptr, nullptr, nullptr, "%u");
             break;
-        case myl::PrimitiveFieldType::i32:
+        case myl::PrimitiveFieldType::I32:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S32, ptr, nullptr, nullptr, "%d");
             break;
-        case myl::PrimitiveFieldType::u64:
+        case myl::PrimitiveFieldType::U64:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_U64, ptr, nullptr);
             break;
-        case myl::PrimitiveFieldType::i64:
+        case myl::PrimitiveFieldType::I64:
             ImGui::InputScalar(name.c_str(), ImGuiDataType_S64, ptr, nullptr);
             break;
-        case myl::PrimitiveFieldType::f32:
+        case myl::PrimitiveFieldType::F32:
             ImGui::InputFloat(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::PrimitiveFieldType::vec2:
+        case myl::PrimitiveFieldType::Vec2:
             ImGui::InputFloat2(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::PrimitiveFieldType::vec3:
+        case myl::PrimitiveFieldType::Vec3:
             ImGui::InputFloat3(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::PrimitiveFieldType::vec4:
+        case myl::PrimitiveFieldType::Vec4:
             ImGui::InputFloat4(name.c_str(), reinterpret_cast<float*>(ptr));
             break;
-        case myl::PrimitiveFieldType::color:
+        case myl::PrimitiveFieldType::Color:
             ImGui::ColorEdit4(name.c_str(), reinterpret_cast<float*>(ptr),
                 ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf
                     | ImGuiColorEditFlags_Float);
@@ -421,13 +421,13 @@ void DebugSystem::showFieldElement(
         }
         break;
     }
-    case myl::FieldType::string: {
+    case myl::FieldType::String: {
         std::string text = reinterpret_cast<myl::String*>(ptr)->str();
         ImGui::InputText(name.c_str(), &text);
         reinterpret_cast<myl::String*>(ptr)->assign(text);
         break;
     }
-    case myl::FieldType::array: {
+    case myl::FieldType::Array: {
         auto ft = std::dynamic_pointer_cast<myl::ArrayFieldType>(fieldType);
         if (ImGui::TreeNode(name.c_str())) {
             for (size_t i = 0; i < ft->size; ++i) {
@@ -438,7 +438,7 @@ void DebugSystem::showFieldElement(
         }
         break;
     }
-    case myl::FieldType::vector: {
+    case myl::FieldType::Vector: {
         auto ft = std::dynamic_pointer_cast<myl::VectorFieldType>(fieldType);
         if (ImGui::TreeNode(name.c_str())) {
             auto& vec = *reinterpret_cast<myl::Vector*>(ptr);
