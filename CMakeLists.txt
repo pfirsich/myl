@@ -6,14 +6,13 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${myl_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+include(cmake/wall.cmake)
 
-# Enable address sanitizer in xcode so it can find the ASan library
-# https://stackoverflow.com/a/53314315/5587737
-set(CMAKE_XCODE_GENERATE_SCHEME ON)
-set(CMAKE_XCODE_SCHEME_ADDRESS_SANITIZER ON)
-set(CMAKE_XCODE_SCHEME_ADDRESS_SANITIZER_USE_AFTER_RETURN ON)
+if (MYL_ENABLE_ASAN)
+  set(GLWRAP_ENABLE_ASAN TRUE)
+  set(GLTF_ENABLE_ASAN TRUE)
+  include(cmake/asan.cmake)
+endif()
 
 set(SRC
   color.cpp
@@ -74,9 +73,4 @@ target_link_libraries(myl libluajit)
 target_link_libraries(myl sfml-graphics sfml-window sfml-system)
 target_link_libraries(myl ImGui-SFML::ImGui-SFML)
 target_link_libraries(myl fmt::fmt)
-
-if(MSVC)
-  target_compile_options(myl PRIVATE /W4 /WX)
-else()
-  target_compile_options(myl PRIVATE -Wall -Wextra -pedantic -Werror)
-endif()
+set_wall(myl)
