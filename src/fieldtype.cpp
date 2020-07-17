@@ -190,6 +190,11 @@ StringFieldType::StringFieldType()
 {
 }
 
+void StringFieldType::init(void* ptr) const
+{
+    new (ptr) myl::String();
+}
+
 void StringFieldType::free(void* ptr) const
 {
     reinterpret_cast<myl::String*>(ptr)->~String();

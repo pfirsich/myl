@@ -60,6 +60,7 @@ struct PrimitiveFieldType : public FieldType {
 struct StringFieldType : public FieldType {
     StringFieldType();
 
+    void init(void* ptr) const override;
     void free(void* ptr) const override;
     std::string asString() const override;
     size_t getSize() const override;

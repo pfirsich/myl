@@ -31,6 +31,7 @@ set(SRC
   modules/window.cpp
   myl.cpp
   struct.cpp
+  structstring.cpp
   systems.cpp
   systems/debug.cpp
   systems/drawfps.cpp

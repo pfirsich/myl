@@ -10,101 +10,27 @@ class String {
     static constexpr size_t minAllocSize = 32;
 
 public:
-    String()
-    {
-        assign(nullptr, 0);
-    }
+    String();
+    String(const char* buf, size_t size);
+    String(const char* str);
+    String(const std::string& str);
+    ~String();
 
-    String(const char* buf, size_t size)
-    {
-        assign(buf, size);
-    }
+    void assign(const char* buf, size_t size);
+    void assign(const String& str);
+    void assign(const char* str);
+    void assign(const std::string& str);
 
-    String(const char* str)
-        : String(str, std::strlen(str))
-    {
-    }
+    String& operator=(const String& str);
+    String& operator=(const char* str);
+    String& operator=(const std::string& str);
 
-    String(const std::string& str)
-        : String(str.data(), str.size())
-    {
-    }
+    std::string str() const;
+    operator std::string() const;
 
-    ~String()
-    {
-        std::free(data_);
-    }
-
-    void assign(const char* buf, size_t size)
-    {
-        if (capacity_ < size + 1) {
-            std::free(data_);
-            const auto allocSize = std::max(minAllocSize, std::max(capacity_ * 2, size + 1));
-            data_ = reinterpret_cast<char*>(std::malloc(allocSize));
-            capacity_ = allocSize;
-        }
-        std::memcpy(data_, buf, size);
-        data_[size] = '\0';
-        size_ = size;
-    }
-
-    void assign(const String& str)
-    {
-        assign(str.getData(), str.getSize());
-    }
-
-    void assign(const char* str)
-    {
-        assign(str, std::strlen(str));
-    }
-
-    void assign(const std::string& str)
-    {
-        assign(str.data(), str.size());
-    }
-
-    String& operator=(const String& str)
-    {
-        assign(str);
-        return *this;
-    }
-
-    String& operator=(const char* str)
-    {
-        assign(str);
-        return *this;
-    }
-
-    String& operator=(const std::string& str)
-    {
-        assign(str);
-        return *this;
-    }
-
-    std::string str() const
-    {
-        return std::string(data_, size_);
-    }
-
-    operator std::string() const
-    {
-        return str();
-    }
-
-    const char* getData() const
-    {
-        return data_;
-    }
-
-    size_t getSize() const
-    {
-        return size_;
-    }
-
-    size_t getCapacity() const
-    {
-        return capacity_;
-    }
+    const char* getData() const;
+    size_t getSize() const;
+    size_t getCapacity() const;
 
 private:
     char* data_ = nullptr;
