@@ -6,6 +6,16 @@
 namespace c = myl::components;
 
 namespace myl {
+namespace components {
+    glm::vec2 Transform::apply(const glm::vec2& point) const
+    {
+        const auto so = (point + origin) * scale;
+        const auto c = std::cos(angle);
+        const auto s = std::sin(angle);
+        return glm::vec2(so.x * c - so.y * s, so.x * s + so.y * c) + position;
+    }
+}
+
 void registerBuiltinComponents()
 {
     myl::registerComponent("Name", myl::StructBuilder().addField("value", &c::Name::value).build());

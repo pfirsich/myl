@@ -15,6 +15,8 @@ namespace components {
         float angle;
         glm::vec2 scale;
         glm::vec2 origin;
+
+        glm::vec2 apply(const glm::vec2& point) const;
     };
 
     struct Color {

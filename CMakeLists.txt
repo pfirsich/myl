@@ -18,6 +18,7 @@ set(SRC
   color.cpp
   componentfile.cpp
   components.cpp
+  batch.cpp
   defaultfont.cpp
   ecs.cpp
   fieldtype.cpp
@@ -67,10 +68,13 @@ include_directories(deps/tomlplusplus/include)
 
 include(luajit)
 
+add_subdirectory(deps/glwrap)
+
 add_executable(myl ${SRC})
 target_link_libraries(myl spdlog::spdlog)
 target_link_libraries(myl libluajit)
 target_link_libraries(myl sfml-graphics sfml-window sfml-system)
 target_link_libraries(myl ImGui-SFML::ImGui-SFML)
 target_link_libraries(myl fmt::fmt)
+target_link_libraries(myl glwx)
 set_wall(myl)

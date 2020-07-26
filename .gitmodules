@@ -25,3 +25,6 @@
 [submodule "deps/fmt"]
 	path = deps/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "deps/glwrap"]
+	path = deps/glwrap
+	url = git@github.com:pfirsich/glwrap.git

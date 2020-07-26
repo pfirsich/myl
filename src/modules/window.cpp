@@ -10,6 +10,9 @@
 #include "input.hpp"
 #include "timer.hpp"
 
+#include <glw.hpp>
+#include <glwx.hpp>
+
 namespace myl {
 namespace modules {
     namespace window {
@@ -59,6 +62,9 @@ namespace modules {
             auto& window = getWindow();
             window.setView(sf::View(sf::FloatRect(0, 0, width / dpr, height / dpr)));
             ImGui::SFML::Init(window);
+
+            gladLoadGL();
+            glwx::debug::init();
 
             setImguiStyle();
 
