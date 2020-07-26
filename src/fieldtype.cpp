@@ -141,7 +141,7 @@ size_t PrimitiveFieldType::getSize() const
     case Type::Vec4:
         return sizeof(float[4]);
     case Type::Color:
-        return sizeof(Color);
+        return sizeof(myl::Color);
     default:
         return 0;
     };
@@ -207,7 +207,7 @@ std::string StringFieldType::asString() const
 
 size_t StringFieldType::getSize() const
 {
-    return sizeof(String);
+    return sizeof(myl::String);
 }
 
 size_t StringFieldType::getAlignment() const
